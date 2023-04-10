@@ -1,0 +1,241 @@
+#!/bin/sh
+#
+# dsv - Improved data sheet viewer
+#
+# Written 2010-2014, 2016, 2018 by Werner Almesberger
+# Copyright 2010-2014, 2016, 2018 Werner Almesberger
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+
+#
+# Theory of operation:
+#
+# We download data sheets from the Internet into local caches and provide a
+# quick access mechanism for viewing the data sheets. A cache is a directory
+# called .dsv/. Caches can be hierarchical. "dsv setup" generates a cache in
+# the local directory. "dsv <component>" and "dsv ls" search the hierarchy,
+# starting with the current directory.
+#
+# Caches contain two types of files: dsv-<ref> is the name or alias with
+# which a data sheet is referenced. <ref>-<filename> is the actual data
+# sheet, with <filename> being the name of the file we downloaded.
+#
+
+DSV_DIR=.dsv
+
+
+usage()
+{
+	echo "usage: $0 [-p] [-u] <component>" 1>&2
+	echo "       $0 help" 1>&2
+	echo "       $0 [ls]" 1>&2
+	echo "       $0 [-c] setup <info-file> ..." 1>&2
+	echo 1>&2
+	echi "  -c   don't check server certificates" 1>&2
+	echo "  -p   show the path instead of displaying the file " 1>&2
+	echo "  -u   show source URL instead of displaying the file " 1>&2
+	exit 1
+}
+
+
+do_wget()
+{
+	wget -nv -U "dsv/1.0" $wget_opts "$@"
+}
+
+
+up()
+{
+	old=`pwd`
+	cd ..
+	new=`pwd`
+	[ "$old" != "$new" ]
+}
+
+
+flush()
+{
+	eval nm=$name
+	nm=`echo "$nm" | sed 's/%/%25/g;s|/|%2F|g'`
+	[ -z "$nm" ] && return
+	if [ -z "$url" ]; then
+		echo "$nm: no URL" 1>&2
+		exit 1
+	fi
+	ds=$nm-`basename "$url" | tr '?&' _`
+	mkdir -p $DSV_DIR
+	if [ ! -r "$DSV_DIR/$ds" ]; then
+		if [ "$zip" ]; then
+			inside=$zip
+			zip=$ds.zip
+		else
+			inside=${url#*.[Zz][Ii][Pp] }
+		fi
+		if [ "$inside" = "$url" ]; then
+			do_wget -O "$DSV_DIR/$ds" "$url"
+			# @@@ should handle error
+		else
+			if [ -z "$zip" ]; then
+				url=${url%`echo x"$inside" | sed 's/./?/g'`}
+				zip=$nm-`basename "$url"`
+			fi
+			if [ ! -r "$DSV_DIR/$zip" ]; then
+				do_wget -O "$DSV_DIR/$zip" "$url"
+				# @@@ should handle error
+			fi
+			unzip -p "$DSV_DIR/$zip" "$inside" >"$DSV_DIR/$ds" ||
+			    { rm -f "$DSV_DIR/$zip" "$DSV_DIR/$ds"; exit 1; }
+		fi
+	fi
+	eval for n in $name $alias\; do \
+	    'nm=`echo "$n" | sed "s/%/%25/g;s|/|%2F|g"`;' \
+	    \{ echo '"$ds"'\; echo '"$url"'\; \} '>$DSV_DIR/dsv-$nm'\; \
+	    done
+	name=
+	alias=
+	url=
+	zip=
+}
+
+
+set_value()
+{
+	case "$tag" in
+		N:|n:)	flush
+			name="\"$value\"";;
+		A:|a:)	alias="$alias \"$value\"";;
+		D:|d:)	url=$value;;
+		Z:|z:)	zip=$value;;
+		"")	;;	# first iteration
+		*)	echo "unrecognized tag \"$tag\"" 1>&2
+			exit 1;;
+	esac
+	value=
+}
+
+
+eof()
+{
+	flush
+	tag=
+}
+
+
+setup()
+{
+	for n in "$@"; do
+		if [ ! -r "$n" ]; then
+			echo "$n: not found" 1>&2
+			continue
+		fi
+		#
+		# "read" doesn't recognize lines that don't end with a newline.
+		# The cat-sed hack below works around this problems.
+		#
+		cat -E "$n" | sed 's/[^$]$/&\n/;s/$$//' | {
+			while read line; do
+				[ "$line" = "${line###}" ] || continue
+				tmp=`echo "$line" |
+				    awk '/^[^\t ]/ { print $1 }'`
+				tail=`echo "$line" |
+				    sed 's/^[^\t ]*[\t ]*//;s/[\t ]*$//'`
+				if [ -z "$tmp" ]; then
+					[ -z "$tail" ] || value="$value $tail"
+				else
+					set_value
+					tag=$tmp
+					value=$tail
+				fi
+			done
+			set_value
+			eof
+		}
+	done
+}
+
+
+list()
+{
+	while true; do
+		if [ -d $DSV_DIR ]; then
+			ls -b -1 $DSV_DIR | sed 's/^dsv-//p;d' |
+			    sed 's|%2F|/|g;s/%25/%/g'
+		fi
+		up || break
+	done | sort | uniq | column
+}
+
+
+view()
+{
+	${DSV_VIEWER:-${DSV_PDFVIEWER:-xdg-open}} "$@"
+}
+
+
+search()
+{
+	while true; do
+		if [ -d $DSV_DIR ]; then
+			name=`echo "$1" | sed 's/%/%25/g;s|/|%2F|g'`
+			if [ -r "$DSV_DIR/dsv-$name" ]; then
+				file=`sed 1q "$DSV_DIR/dsv-$name"`
+				if [ ! -r "$DSV_DIR/$file" ]; then
+					echo "$1 -> $file: does not exist" 1>&2
+					exit 1
+				fi
+				if $path; then
+					echo "`pwd`/$DSV_DIR/$file"
+				elif ! $show_url; then
+					view "$DSV_DIR/$file"
+				fi
+				if $show_url; then
+					url=`sed 1d "$DSV_DIR/dsv-$name"`
+					if [ "$url" ]; then
+						echo "$url"
+					else
+						echo "$DSV_DIR/dsv-$name" \
+						    "does not contain a URL" \
+						    "- please regenerate" 1>&2
+						exit 1
+					fi
+				fi
+				exit
+			fi
+		fi
+		if ! up; then
+			echo "no data sheet found for \"$1\"" 1>&2
+			exit 1
+		fi
+	done
+}
+
+
+path=false
+show_url=false
+wget_opts=
+
+while true; do
+	case "$1" in
+		-c)	wget_opts=--no-check-certificate
+			shift;;
+		-p)	path=true
+			shift;;
+		-u)	show_url=true
+			shift;;
+		-*)	usage;;
+		*)	break;;
+	esac
+done
+
+case "$1" in
+	help|-*)	usage;;
+	""|ls)		list;;
+	setup)		shift
+			[ "$1" ] || usage
+			setup "$@";;
+	*)		search "$@";;
+esac

@@ -1,0 +1,56 @@
+#===== Bouffalo ===============================================================
+
+# BL808 Data Sheet
+
+N: BL808DS
+A: bl808ds
+A: bl8ds
+A: blds
+D: https://github.com/bouffalolab/bl_docs/raw/main/BL808_DS/en/BL808_DS_1.2_en.pdf
+
+# BL808 Reference Manual
+
+N: BL808RM
+A: bl808rm
+A: bl8rm
+A: blrm
+D: https://github.com/bouffalolab/bl_docs/raw/main/BL808_RM/en/BL808_RM_en_1.2.pdf
+
+# BL616 Data Sheet
+
+N: BL616DS
+A: bl6ds
+D: https://github.com/bouffalolab/bl_docs/raw/main/BL616_DS/en/BL616_BL618_DS_1.0_en.pdf
+
+# BL616 Reference Manual
+
+N: BL616RM
+A: bl616rm
+A: bl6rm
+D: https://github.com/bouffalolab/bl_docs/raw/main/BL616_RM/en/BL616_BL618_RM_0.93_en.pdf
+
+#===== Ox64 ===================================================================
+
+N: Ox64
+A: ox64
+D: https://files.pine64.org/doc/ox64/PINE64_Ox64-Schematic-202221018.pdf
+
+#===== SiSpeed M1s ============================================================
+
+N: M1s-DS
+A: m1sds
+A: m1ds
+D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s/1_Specification/Sipeed%20M1s%20Datasheet%20V1.0.pdf
+
+N: M1s-Schematic
+A: m1ssch
+A: m1sch
+D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s/2_Schematic/M1s_3261_Schematic.pdf
+
+N: M1s-Dock-DS
+A: m1dds
+D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/1_Specification/Sipeed%20M1s%20Dock%20Datasheet%20V1.0.pdf
+
+N: M1s-Dock-Schematic
+A: m1dsch
+D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/2_Schematic/M1s_Dock_3272_Schematic_V1.pdf
