@@ -1,0 +1,231 @@
+Build notes for the OpenBouffalo Firmware Repository
+====================================================
+
+https://github.com/openbouffalo/OBLFR
+
+We build the "hello world" program. This is on the Sipeed M1s, with Ubuntu on
+the PC.
+
+
+1. Downloads
+------------
+
+# OBLFR
+git clone https://github.com/openbouffalo/OBLFR.git
+# real    0m1.151s
+
+# SDK
+git clone https://github.com/bouffalolab/bl_mcu_sdk.git
+# real    5m43.696s
+ln -s BLFlashCommand-ubuntu \
+  bl_mcu_sdk/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand
+
+# Toolchain
+git clone https://github.com/bouffalolab/toolchain_gcc_t-head_linux.git
+# real    12m59.563s
+PATH=$PATH:`pwd`/toolchain_gcc_t-head_linux/bin/
+
+
+2. Build
+--------
+
+cd OBLFR/apps/helloworld
+make BOARD=m1sdock
+# real    0m5.473s
+
+cd ../../..
+
+
+3. Flashing
+-----------
+
+First we have to find the right serial device. After connecting the "UART"
+USB port on the M1s to the PC, dmesg will show something like this:
+
+usb 1-6.3: New USB device found, idVendor=ffff, idProduct=ffff, bcdDevice= 1.00
+usb 1-6.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 1-6.3: Product: Bouffalo Serial
+usb 1-6.3: Manufacturer: Bouffalo
+usb 1-6.3: SerialNumber: FactoryAIOT Prog 7EEB5B
+cdc_acm 1-6.3:1.0: ttyACM2: USB ACM device
+cdc_acm 1-6.3:1.2: ttyACM3: USB ACM device
+
+One of thw two ttyACM devices is the one to use for flashing new firmware.
+
+bl_mcu_sdk/tools/bflb_tools/bouffalo_flash_cube/BLFlashCommand \
+  --interface=uart --baudrate=2000000 --chipname=bl808 --cpu_id=m0 \
+  --config=/home/bl808/OBLFR/apps/helloworld/flash_prog_cfg.ini \
+  --port=/dev/ttyACM3
+
+If using the wrong ttyACM, there will be errors in the "image get bootinfo"
+section. If things run successfully, the output should be as follows:
+
+[20:20:49.463] - Serial port is /dev/ttyACM3
+[20:20:49.463] - ==================================================
+[20:20:49.464] - Program Start
+[20:20:49.464] - ========= eflash loader cmd arguments =========
+[20:20:49.465] - serial port is /dev/ttyACM3
+[20:20:49.465] - chiptype: bl808
+[20:20:49.465] - cpu_reset=False
+[20:20:49.468] - ========= Interface is uart =========
+[20:20:49.469] - Bootrom load
+[20:20:49.469] - ========= get_boot_info =========
+[20:20:49.469] - ========= image get bootinfo =========
+[20:20:49.475] - default set DTR high
+[20:20:49.576] - usb serial port
+[20:20:49.626] - clean buf
+[20:20:49.627] - send sync
+[20:20:50.139] - ack is b'24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff24ff004f4b'
+[20:20:50.170] - shake hand success
+[20:20:50.672] - data read is b'01000808000000000b14c1025a72de05b91859002ff4fb18'
+[20:20:50.672] - ========= ChipID: 18b905de725a =========
+[20:20:50.672] - Get bootinfo time cost(ms): 1203.187255859375
+[20:20:50.672] - clock para file: /home/bl808/bl_mcu_sdk/tools/bflb_tools/bouffalo_flash_cube/chips/bl808/efuse_bootheader/clock_para.bin
+[20:20:50.673] - Updating data according to </home/bl808/bl_mcu_sdk/tools/bflb_tools/bouffalo_flash_cube/chips/bl808/efuse_bootheader/efuse_bootheader_cfg.conf[BOOTHEADER_GROUP0_CFG]>
+[20:20:50.678] - Created file len:352
+[20:20:50.680] - change bdrate: 2000000
+[20:20:50.680] - Clock PLL set
+[20:20:50.682] - Set clock time cost(ms): 1.39794921875
+[20:20:50.793] - Read mac addr
+[20:20:50.794] - flash set para
+[20:20:50.794] - get flash pin cfg from bootinfo: 0x04
+[20:20:50.794] - set flash cfg: 14104
+[20:20:50.794] - Set flash config
+[20:20:50.796] - Set para time cost(ms): 2.028564453125
+[20:20:50.796] - ========= flash read jedec ID =========
+[20:20:50.797] - Read flash jedec ID
+[20:20:50.797] - readdata:
+[20:20:50.797] - b'ef401800'
+[20:20:50.797] - Finished
+[20:20:50.805] - Program operation
+[20:20:50.805] - Dealing Index 0
+[20:20:50.805] - ========= programming /home/bl808/OBLFR/apps/helloworld/./build/build_out/helloworld_bl808_m0.bin to 0x000000
+[20:20:50.812] - flash para file: /home/bl808/bl_mcu_sdk/tools/bflb_tools/bouffalo_flash_cube/chips/bl808/efuse_bootheader/flash_para.bin
+[20:20:50.812] - Set flash config
+[20:20:50.814] - Set para time cost(ms): 2.4365234375
+[20:20:50.815] - ========= flash load =========
+[20:20:50.815] - ========= flash read =========
+[20:20:50.837] - Read 4096/4096
+[20:20:50.837] - Flash read time cost(ms): 21.6416015625
+[20:20:50.837] - Finished
+[20:20:50.837] - ========= flash erase =========
+[20:20:50.837] - Erase flash  from 0x0 to 0xf49f
+[20:20:51.062] - Erase time cost(ms): 224.8125
+[20:20:51.084] - Load 4096/62624 {"progress":6}
+[20:20:51.106] - Load 8192/62624 {"progress":13}
+[20:20:51.128] - Load 12288/62624 {"progress":19}
+[20:20:51.151] - Load 16384/62624 {"progress":26}
+[20:20:51.173] - Load 20480/62624 {"progress":32}
+[20:20:51.195] - Load 24576/62624 {"progress":39}
+[20:20:51.217] - Load 28672/62624 {"progress":45}
+[20:20:51.240] - Load 32768/62624 {"progress":52}
+[20:20:51.262] - Load 36864/62624 {"progress":58}
+[20:20:51.284] - Load 40960/62624 {"progress":65}
+[20:20:51.306] - Load 45056/62624 {"progress":71}
+[20:20:51.328] - Load 49152/62624 {"progress":78}
+[20:20:51.352] - Load 53248/62624 {"progress":85}
+[20:20:51.374] - Load 57344/62624 {"progress":91}
+[20:20:51.397] - Load 61440/62624 {"progress":98}
+[20:20:51.405] - Load 62624/62624 {"progress":100}
+[20:20:51.405] - Load 62624/62624 {"progress":100}
+[20:20:51.405] - Write check
+[20:20:51.408] - Flash load time cost(ms): 345.60107421875
+[20:20:51.408] - Finished
+[20:20:51.409] - Sha caled by host: e5d7884ef1c732caad00ef248f964c1ae54d3f5351befc71aefa494b513093ac
+[20:20:51.409] - xip mode Verify
+[20:20:51.462] - Read Sha256/62624
+[20:20:51.462] - Flash xip readsha time cost(ms): 52.85009765625
+[20:20:51.462] - Finished
+[20:20:51.463] - Sha caled by dev: e5d7884ef1c732caad00ef248f964c1ae54d3f5351befc71aefa494b513093ac
+[20:20:51.463] - Verify success
+[20:20:51.464] - Program Finished
+[20:20:51.464] - All time cost(ms): 1999.751708984375
+[20:20:51.602] - close interface
+[20:20:51.602] - [All Success]
+
+
+4. Running the hello wold firmware
+----------------------------------
+
+picocom implements a straightforward serial console and supports the high UART
+bit rate of 2 Mbps the BL808 uses. We can connect to both ttyACMs:
+
+picocom -b 2000000 /dev/ttyACM3
+[... picocom output ... ]
+...
+[W][] hello world
+[I][] hello world
+
+[Press the RST button]
+      ____               __  __      _       
+[I][]  / __ \                 |  _ \             / _|/ _|    | |      
+[I][] | |  | |_ __   ___ _ __ | |_) | ___  _   _| |_| |_ __ _| | ___  
+[I][] | |  | | '_ \ / _ \ '_ \|  _ < / _ \| | | |  _|  _/ _` | |/ _ \ 
+[I][] | |__| | |_) |  __/ | | | |_) | (_) | |_| | | | || (_| | | (_) |
+[I][]  \____/| .__/ \___|_| |_|____/ \___/ \__,_|_| |_| \__,_|_|\___/ 
+[I][]        | |                                                      
+[I][]        |_|                                                      
+[I][] 
+[I][] Powered by BouffaloLab
+[I][] Build:20:09:59,Apr  9 2023
+[I][] Copyright (c) 2023 OpenBouffalo team
+[I][] Copyright (c) 2022 Bouffalolab team
+[I][] =========== flash cfg ==============
+[I][] jedec id   0xEF4018
+[I][] mid            0xEF
+[I][] iomode         0x04
+[I][] clk delay      0x01
+[I][] clk invert     0x01
+[I][] read reg cmd0  0x05
+[I][] read reg cmd1  0x35
+[I][] write reg cmd0 0x01
+[I][] write reg cmd1 0x31
+[I][] qe write len   0x01
+[I][] cread support  0x00
+[I][] cread code     0xFF
+[I][] burst wrap cmd 0x77
+[I][] sector size:   0x04
+[I][] =====================================
+[I][] dynamic memory init success,heap size = 157 Kbyte 
+[F][] hello world
+[E][] hello world
+[W][] hello world
+[I][] hello world
+[F][] hello world
+[E][] hello world
+...
+
+Furthermore the enormous white LED of the M1s blinks at 0.5 Hz.
+If one of the user buttons (SW1 and SW2) is pressed when printing a "hello
+world", the program also prints "Button N is pressed" for each button pressed.
+
+Exit from picocom with Ctrl-A Ctrl-X.
+
+We also get output on ttyACM2, but this may be a remnant from an earlier
+attempt to run buildroot.
+
+picocom -b 2000000 /dev/ttyACM2
+[... picocom output ... ]
+...
+[Press the RST button]
+[I][] 
+[I][]   ____                   ____               __  __      _       
+[I][]  / __ \                 |  _ \             / _|/ _|    | |      
+[I][] | |  | |_ __   ___ _ __ | |_) | ___  _   _| |_| |_ __ _| | ___  
+[I][] | |  | | '_ \ / _ \ '_ \|  _ < / _ \| | | |  _|  _/ _` | |/ _ \ 
+[I][] | |__| | |_) |  __/ | | | |_) | (_) | |_| | | | || (_| | | (_) |
+[I][]  \____/| .__/ \___|_| |_|____/ \___/ \__,_|_| |_| \__,_|_|\___/ 
+[I][]        | |                                                      
+[I][]        |_|                                                      
+[I][] 
+[I][] Powered by BouffaloLab
+[I][] Build:20:31:59,Apr  6 2023
+[I][] Copyright (c) 2023 OpenBouffalo team
+[I][] Copyright (c) 2022 Bouffalolab team
+[I][] dynamic memory init success,heap s[I][LowLoad] D0 start...
+[I][LowLoad] low_load start... 
+[I][LowLoad] Header at 0x5d5ff000
+[E][LowLoad] invalid boot header magic: 0xffffffff
+[I][LowLoad] load time: 562 us 
+
+There is no other output on ttyACM2
