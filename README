@@ -3,3 +3,16 @@ Notes, links, scripts, code snippets for BL808 development
 
 This is Werner's collection of public notes, links, scripts, code snippets, and
 whatever else may be useful for BL808 development.
+
+- links.html: useful links related to BL808 software develipment, the Sipeed
+  M1s module, the OpenBouddalo project, and so on.
+
+- BOOKSHELF, bin/dsv, Makefile: a system to locally cache data sheets (PDF) and
+  show them with "dsv keyword".
+
+- NOTES-hello.txt: lab notes on building and running OBLFR, a bare-metal
+  application for the BL808.
+
+- NOTES-buildroot.txt: lab notes for building and running the OpenBoufallo
+  Linux system based on buildroot.
+- 
