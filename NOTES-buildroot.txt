@@ -1,0 +1,547 @@
+Build notes for buildroot
+=========================
+
+https://github.com/openbouffalo/buildroot_bouffalo
+
+We build the buildroot-based OpenBouffalo Linux system.
+This is for the Sipeed M1s, with Ubuntu on the PC.
+
+
+1. Downloads
+------------
+
+# buildroot (does not include downloading the package sources)
+git clone https://github.com/buildroot/buildroot
+real    1m19.508s
+
+# The buildroot overlay
+git clone https://github.com/openbouffalo/buildroot_bouffalo
+# real    0m1.075s
+
+
+2. Toolchain (work-around)
+--------------------------
+
+The buildroot_bouffalo seems to get PATH wrong for the "oblfr" package.
+We can work around this by downloading the toolchain (see NOTES-hello.txt)
+and setting
+
+PATH=$PATH:`pwd`/toolchain_gcc_t-head_linux/bin
+
+
+3. Build
+--------
+
+export BR_BOUFFALO_OVERLAY_PATH=`pwd`/buildroot_bouffalo
+cd buildroot
+make BR2_EXTERNAL=$BR_BOUFFALO_OVERLAY_PATH pine64_ox64_defconfig
+# real    0m1.297s
+make
+# real    44m53.924s
+
+
+4. Install the Flash programmer
+-------------------------------
+
+Since, compared to OBLFR, the flashing process is more complex when installing
+Linux, we use the GUI flasher for now.
+
+wget https://dev.bouffalolab.com/media/upload/download/BouffaloLabDevCube-v1.8.3.zip
+mkdir BLDevCube
+cd BLDevCube
+unzip ../BouffaloLabDevCube-v1.8.3.zip
+chmod +x BLDevCube-ubuntu
+cd ..
+
+
+5. Flashing
+-----------
+
+BLDevCube/BLDevCube-ubuntu
+
+Then follow the instructions on
+https://github.com/openbouffalo/buildroot_bouffalo
+
+- Select BL808, Finish
+- Select the MCU tab
+- M0: group 0, address 0x58000000, path to
+  buildroot/output/images/m0_lowload_bl808_m0.bin
+  (note: file name differs from the instructions)
+- D0: group 0, address 0x58100000, path to
+  buildroot/output/images/d0_lowload_bl808_d0.bin
+  (note: file name differs from the instructions)
+- Select UART port (or make a guess)
+- Create & Download
+
+- Select IOT tab
+- Single Download Options: Enable, address 0x800000, path to
+  buildroot/output/images/bl808-firmware.bin
+- Select the same UART port as before
+- Create & Download
+
+- Copy buildroot/output/images/sdcard.img (1.7 GB !) to the uSD card
+  (note: the instructions speak of a sdcard-pine64-*.img.xz)
+  E.g.,
+  dd if=buildroot/output/images/sdcard.img of=/dev/sdc
+
+
+6. Running Linux
+----------------
+
+Insert th e uSD card.
+
+Optional: connect a console to the UART used for flashing, e.g.,
+picocom -b 2000000 /dev/ttyACM2
+
+Connect a console to the other UART, e.g.,
+picocom -b 2000000 /dev/ttyACM2
+
+Press the RST button
+
+
+A. Issues encountered
+---------------------
+
+The instructions on https://github.com/openbouffalo/buildroot_bouffalo
+
+- The compiler isn't found in PATH.
+  Work-around: see section 2.
+
+- The M0 lowload file name is
+      m0_lowload_bl808_m0.bin
+  not m0_low_load_bl808_m0.bin
+
+- Likewise, the D0 lowload file name is
+      d0_lowload_bl808_d0.bin
+  not d0_low_load_bl808_d0.bin
+
+- The instructions say that there is an SD card image called
+  sdcard-pine64-*.img.xz
+  but what we have is buildroot/output/images/sdcard.img
+
+
+B. Console output when flashing lowload
+---------------------------------------
+
+[12:05:29.242] - EFUSE_CFG
+[12:05:29.242] - BOOTHEADER_GROUP0_CFG
+[12:05:29.242] - BOOTHEADER_GROUP1_CFG
+[12:05:29.247] - Create bootheader using /home/bl808/BLDevCube/chips/bl808/img_create_mcu/efuse_bootheader_cfg.ini
+[12:05:29.248] - Updating data according to </home/bl808/BLDevCube/chips/bl808/img_create_mcu/efuse_bootheader_cfg.ini[BOOTHEADER_GROUP0_CFG]>
+[12:05:29.250] - Created file len:352
+[12:05:29.252] - Create bootheader using /home/bl808/BLDevCube/chips/bl808/img_create_mcu/efuse_bootheader_cfg.ini
+[12:05:29.252] - Updating data according to </home/bl808/BLDevCube/chips/bl808/img_create_mcu/efuse_bootheader_cfg.ini[BOOTHEADER_GROUP1_CFG]>
+[12:05:29.255] - Created file len:352
+[12:05:29.256] - Create efuse using /home/bl808/BLDevCube/chips/bl808/img_create_mcu/efuse_bootheader_cfg.ini
+[12:05:29.256] - Updating data according to </home/bl808/BLDevCube/chips/bl808/img_create_mcu/efuse_bootheader_cfg.ini[EFUSE_CFG]>
+[12:05:29.259] - Created file len:256
+[12:05:29.261] - Image create path: /home/bl808/BLDevCube/chips/bl808/img_create_mcu
+[12:05:29.261] - Config file: /home/bl808/BLDevCube/chips/bl808/img_create_mcu/img_create_cfg.ini
+[12:05:29.300] - img already have bootheader
+[12:05:29.300] - Write flash img direct
+[12:05:29.302] - Image hash is b'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+[12:05:29.302] - Header crc: b'76c33566'
+[12:05:29.303] - Write flash img
+[12:05:29.303] - Encrypt efuse data
+[12:05:29.304] - ========= eflash loader config =========
+[12:05:29.308] - group0 img len error, get 61664 except 1075840
+[12:05:29.318] - Version: eflash_loader_v2.4.5
+[12:05:29.318] - Program Start
+[12:05:29.318] - ========= eflash loader cmd arguments =========
+[12:05:29.318] - None
+[12:05:29.319] - Config file: /home/bl808/BLDevCube/chips/bl808/eflash_loader/eflash_loader_cfg.ini
+[12:05:29.320] - serial port is /dev/ttyACM3 (PROG)
+[12:05:29.320] - cpu_reset=False
+[12:05:29.320] - chiptype: bl808
+[12:05:29.320] - ========= Interface is uart =========
+[12:05:29.320] - com speed: 2000000
+[12:05:29.320] - Bootrom load
+[12:05:29.320] - ========= get_boot_info =========
+[12:05:29.320] - ========= image get bootinfo =========
+[12:05:31.324] - ack is
+[12:05:31.325] - Not ack OK
+[12:05:31.325] - result:
+[12:05:31.360] - default set DTR high
+[12:05:31.460] - usb serial port
+[12:05:31.513] - clean buf
+[12:05:31.514] - send sync
+[12:05:32.023] - ack is 004f4b
+[12:05:32.054] - shake hand success
+[12:05:32.557] - data read is b'01000808000000000b14c1025a72de05b91859002ff4fb18'
+[12:05:32.558] - ========= ChipID: 18b905de725a =========
+[12:05:32.558] - Get bootinfo time cost(ms): 3238.1484375
+[12:05:32.559] - clock para file: /home/bl808/BLDevCube/chips/bl808/efuse_bootheader/clock_para.bin
+[12:05:32.563] - change bdrate: 2000000
+[12:05:32.564] - Clock PLL set
+[12:05:32.564] - clock para:
+[12:05:32.564] - 5043464707040000030103000102000201010001010101010a894b86
+[12:05:32.566] - Set clock time cost(ms): 2.330322265625
+[12:05:32.678] - Read mac addr
+[12:05:32.681] - flash set para
+[12:05:32.681] - get flash pin cfg from bootinfo: 0x04
+[12:05:32.682] - set flash cfg: 14104
+[12:05:32.682] - Set flash config
+[12:05:32.685] - Set para time cost(ms): 1.958984375
+[12:05:32.685] - ========= flash read jedec ID =========
+[12:05:32.691] - Read flash jedec ID
+[12:05:32.692] - flash jedec id: ef401800
+[12:05:32.692] - Finished
+[12:05:32.705] - Program operation
+[12:05:32.706] - Dealing Index 0
+[12:05:32.707] - ========= programming chips/bl808/img_create_mcu/bootinfo_group0.bin to 0x00000000
+[12:05:32.717] - flash para file: /home/bl808/BLDevCube/chips/bl808/efuse_bootheader/flash_para.bin
+[12:05:32.719] - Set flash config
+[12:05:32.722] - Set para time cost(ms): 2.39892578125
+[12:05:32.723] - ========= flash load =========
+[12:05:32.723] - ========= flash erase =========
+[12:05:32.724] - Erase flash from 0x0 to 0xfff
+[12:05:32.769] - Erase time cost(ms): 44.060546875
+[12:05:32.792] - Load 4096/4096 {"progress":100}
+[12:05:32.793] - Load 4096/4096 {"progress":100}
+[12:05:32.793] - Write check
+[12:05:32.800] - Flash load time cost(ms): 30.24853515625
+[12:05:32.800] - Finished
+[12:05:32.801] - Sha caled by host: d260f973afdd1e81292f08146752f3966eb021bab510b64bd07a7b9d852ae5a2
+[12:05:32.801] - xip mode Verify
+[12:05:32.808] - Read Sha256/4096
+[12:05:32.808] - Flash xip readsha time cost(ms): 5.0166015625
+[12:05:32.809] - Finished
+[12:05:32.810] - Sha caled by dev: d260f973afdd1e81292f08146752f3966eb021bab510b64bd07a7b9d852ae5a2
+[12:05:32.810] - Verify success
+[12:05:32.811] - Dealing Index 1
+[12:05:32.811] - ========= programming chips/bl808/img_create_mcu/img_group0.bin to 0x00001000
+[12:05:32.826] - flash para file: /home/bl808/BLDevCube/chips/bl808/efuse_bootheader/flash_para.bin
+[12:05:32.828] - Set flash config
+[12:05:32.830] - Set para time cost(ms): 2.379150390625
+[12:05:32.831] - ========= flash load =========
+[12:05:32.834] - ========= flash read =========
+[12:05:32.856] - Read 4096/4096
+[12:05:32.856] - Flash read time cost(ms): 21.78564453125
+[12:05:32.856] - Finished
+[12:05:32.857] - ========= flash erase =========
+[12:05:32.857] - Erase flash from 0x1000 to 0x107a7f
+[12:05:36.922] - Erase time cost(ms): 4065.16943359375
+[12:05:36.975] - decompress flash load 48744
+[12:05:36.996] - Load 4096/48744 {"progress":8}
+[12:05:37.022] - Load 8192/48744 {"progress":16}
+[12:05:37.056] - Load 12288/48744 {"progress":25}
+[12:05:37.082] - Load 16384/48744 {"progress":33}
+[12:05:37.116] - Load 20480/48744 {"progress":42}
+[12:05:37.151] - Load 24576/48744 {"progress":50}
+[12:05:37.186] - Load 28672/48744 {"progress":58}
+[12:05:37.213] - Load 32768/48744 {"progress":67}
+[12:05:37.257] - Load 36864/48744 {"progress":75}
+[12:05:38.460] - Load 40960/48744 {"progress":84}
+[12:05:38.485] - Load 45056/48744 {"progress":92}
+[12:05:38.520] - Load 48744/48744 {"progress":100}
+[12:05:38.521] - Load 48744/48744 {"progress":100}
+[12:05:38.521] - Write check
+[12:05:38.558] - Flash load time cost(ms): 1635.014404296875
+[12:05:38.559] - Finished
+[12:05:38.565] - Sha caled by host: f6135d9b2efb8ed7dbb390b4ea0af18134b81ad694c97706e4d202748f00c4ab
+[12:05:38.565] - xip mode Verify
+[12:05:39.448] - Read Sha256/1075840
+[12:05:39.450] - Flash xip readsha time cost(ms): 884.623779296875
+[12:05:39.451] - Finished
+[12:05:39.452] - Sha caled by dev: f6135d9b2efb8ed7dbb390b4ea0af18134b81ad694c97706e4d202748f00c4ab
+[12:05:39.452] - Verify success
+[12:05:39.453] - Program Finished
+[12:05:39.453] - All time cost(ms): 10135.451904296875
+[12:05:39.555] - close interface
+[12:05:39.555] - [All Success]
+
+
+C. Console output when flashing the firmware
+--------------------------------------------
+
+[12:12:18.637] - ========= Interface is Uart =========
+[12:12:18.648] - eflash loader bin is eflash_loader_auto.bin
+[12:12:18.657] - Version: eflash_loader_v2.4.5
+[12:12:18.657] - Program Start
+[12:12:18.658] - ========= eflash loader cmd arguments =========
+[12:12:18.658] - /home/bl808/BLDevCube/chips/bl808/eflash_loader/eflash_loader_cfg.ini
+[12:12:18.658] - Config file: /home/bl808/BLDevCube/chips/bl808/eflash_loader/eflash_loader_cfg.ini
+[12:12:18.658] - serial port is /dev/ttyACM3 (PROG)
+[12:12:18.658] - cpu_reset=False
+[12:12:18.659] - chiptype: bl808
+[12:12:18.659] - ========= Interface is uart =========
+[12:12:18.659] - com speed: 2000000
+[12:12:18.660] - Bootrom load
+[12:12:18.660] - ========= get_boot_info =========
+[12:12:18.660] - ========= image get bootinfo =========
+[12:12:20.663] - ack is
+[12:12:20.664] - Not ack OK
+[12:12:20.664] - result:
+[12:12:20.680] - default set DTR high
+[12:12:20.780] - usb serial port
+[12:12:20.833] - clean buf
+[12:12:20.833] - send sync
+[12:12:21.342] - ack is 004f4b
+[12:12:21.374] - shake hand success
+[12:12:21.877] - data read is b'01000808000000000b14c1025a72de05b91859002ff4fb18'
+[12:12:21.878] - ========= ChipID: 18b905de725a =========
+[12:12:21.878] - Get bootinfo time cost(ms): 3218.34033203125
+[12:12:21.879] - clock para file: /home/bl808/BLDevCube/chips/bl808/efuse_bootheader/clock_para.bin
+[12:12:21.882] - change bdrate: 2000000
+[12:12:21.883] - Clock PLL set
+[12:12:21.883] - clock para:
+[12:12:21.884] - 5043464707040000030103000102000201010001010101010a894b86
+[12:12:21.886] - Set clock time cost(ms): 2.353759765625
+[12:12:21.998] - Read mac addr
+[12:12:22.000] - flash set para
+[12:12:22.000] - get flash pin cfg from bootinfo: 0x04
+[12:12:22.001] - set flash cfg: 14104
+[12:12:22.001] - Set flash config
+[12:12:22.004] - Set para time cost(ms): 2.008544921875
+[12:12:22.004] - ========= flash read jedec ID =========
+[12:12:22.006] - Read flash jedec ID
+[12:12:22.007] - flash jedec id: ef401800
+[12:12:22.007] - Finished
+[12:12:22.021] - Program operation
+[12:12:22.022] - Dealing Index 0
+[12:12:22.022] - ========= programming chips/bl808/img_create_iot/img_single.bin to 0x00800000
+[12:12:22.053] - flash para file: /home/bl808/BLDevCube/chips/bl808/efuse_bootheader/flash_para.bin
+[12:12:22.054] - Set flash config
+[12:12:22.057] - Set para time cost(ms): 2.3583984375
+[12:12:22.057] - ========= flash load =========
+[12:12:22.071] - ========= flash erase =========
+[12:12:22.072] - Erase flash from 0x800000 to 0xefffff
+[12:12:47.154] - Erase time cost(ms): 25082.137939453125
+[12:12:47.437] - decompress flash load 332212
+[12:12:47.459] - Load 4096/332212 {"progress":1}
+[12:12:47.571] - Load 8192/332212 {"progress":2}
+[12:12:47.605] - Load 12288/332212 {"progress":3}
+[12:12:47.631] - Load 16384/332212 {"progress":4}
+[12:12:47.667] - Load 20480/332212 {"progress":6}
+[12:12:47.700] - Load 24576/332212 {"progress":7}
+[12:12:47.745] - Load 28672/332212 {"progress":8}
+[12:12:47.780] - Load 32768/332212 {"progress":9}
+[12:12:47.815] - Load 36864/332212 {"progress":11}
+[12:12:47.842] - Load 40960/332212 {"progress":12}
+[12:12:47.876] - Load 45056/332212 {"progress":13}
+[12:12:47.912] - Load 49152/332212 {"progress":14}
+[12:12:47.947] - Load 53248/332212 {"progress":16}
+[12:12:48.001] - Load 57344/332212 {"progress":17}
+[12:12:48.060] - Load 61440/332212 {"progress":18}
+[12:12:48.085] - Load 65536/332212 {"progress":19}
+[12:12:48.110] - Load 69632/332212 {"progress":20}
+[12:12:48.135] - Load 73728/332212 {"progress":22}
+[12:12:48.169] - Load 77824/332212 {"progress":23}
+[12:12:48.194] - Load 81920/332212 {"progress":24}
+[12:12:48.218] - Load 86016/332212 {"progress":25}
+[12:12:48.243] - Load 90112/332212 {"progress":27}
+[12:12:48.268] - Load 94208/332212 {"progress":28}
+[12:12:48.293] - Load 98304/332212 {"progress":29}
+[12:12:48.318] - Load 102400/332212 {"progress":30}
+[12:12:48.343] - Load 106496/332212 {"progress":32}
+[12:12:48.368] - Load 110592/332212 {"progress":33}
+[12:12:48.393] - Load 114688/332212 {"progress":34}
+[12:12:48.418] - Load 118784/332212 {"progress":35}
+[12:12:48.443] - Load 122880/332212 {"progress":36}
+[12:12:48.476] - Load 126976/332212 {"progress":38}
+[12:12:48.500] - Load 131072/332212 {"progress":39}
+[12:12:48.526] - Load 135168/332212 {"progress":40}
+[12:12:48.550] - Load 139264/332212 {"progress":41}
+[12:12:48.575] - Load 143360/332212 {"progress":43}
+[12:12:48.600] - Load 147456/332212 {"progress":44}
+[12:12:48.625] - Load 151552/332212 {"progress":45}
+[12:12:48.650] - Load 155648/332212 {"progress":46}
+[12:12:48.674] - Load 159744/332212 {"progress":48}
+[12:12:48.699] - Load 163840/332212 {"progress":49}
+[12:12:48.724] - Load 167936/332212 {"progress":50}
+[12:12:48.749] - Load 172032/332212 {"progress":51}
+[12:12:48.774] - Load 176128/332212 {"progress":53}
+[12:12:48.807] - Load 180224/332212 {"progress":54}
+[12:12:48.832] - Load 184320/332212 {"progress":55}
+[12:12:48.857] - Load 188416/332212 {"progress":56}
+[12:12:48.881] - Load 192512/332212 {"progress":57}
+[12:12:48.906] - Load 196608/332212 {"progress":59}
+[12:12:48.931] - Load 200704/332212 {"progress":60}
+[12:12:48.956] - Load 204800/332212 {"progress":61}
+[12:12:48.981] - Load 208896/332212 {"progress":62}
+[12:12:49.006] - Load 212992/332212 {"progress":64}
+[12:12:49.031] - Load 217088/332212 {"progress":65}
+[12:12:49.055] - Load 221184/332212 {"progress":66}
+[12:12:49.080] - Load 225280/332212 {"progress":67}
+[12:12:49.114] - Load 229376/332212 {"progress":69}
+[12:12:49.139] - Load 233472/332212 {"progress":70}
+[12:12:49.164] - Load 237568/332212 {"progress":71}
+[12:12:49.189] - Load 241664/332212 {"progress":72}
+[12:12:49.214] - Load 245760/332212 {"progress":73}
+[12:12:49.239] - Load 249856/332212 {"progress":75}
+[12:12:49.263] - Load 253952/332212 {"progress":76}
+[12:12:49.288] - Load 258048/332212 {"progress":77}
+[12:12:49.313] - Load 262144/332212 {"progress":78}
+[12:12:49.338] - Load 266240/332212 {"progress":80}
+[12:12:49.371] - Load 270336/332212 {"progress":81}
+[12:12:49.396] - Load 274432/332212 {"progress":82}
+[12:12:49.421] - Load 278528/332212 {"progress":83}
+[12:12:49.448] - Load 282624/332212 {"progress":85}
+[12:12:49.474] - Load 286720/332212 {"progress":86}
+[12:12:49.500] - Load 290816/332212 {"progress":87}
+[12:12:49.535] - Load 294912/332212 {"progress":88}
+[12:12:49.561] - Load 299008/332212 {"progress":90}
+[12:12:49.586] - Load 303104/332212 {"progress":91}
+[12:12:49.613] - Load 307200/332212 {"progress":92}
+[12:12:49.638] - Load 311296/332212 {"progress":93}
+[12:12:49.672] - Load 315392/332212 {"progress":94}
+[12:12:49.699] - Load 319488/332212 {"progress":96}
+[12:12:49.724] - Load 323584/332212 {"progress":97}
+[12:12:49.772] - Load 327680/332212 {"progress":98}
+[12:12:49.808] - Load 331776/332212 {"progress":99}
+[12:12:54.530] - Load 332212/332212 {"progress":100}
+[12:12:54.530] - Load 332212/332212 {"progress":100}
+[12:12:54.534] - Write check
+[12:12:57.880] - Flash load time cost(ms): 10723.7705078125
+[12:12:57.880] - Finished
+[12:12:57.901] - Sha caled by host: 93ffaefc05b66615073633edb5f8cb2a71ea67624ce43d16c27344816e5cc7f1
+[12:12:57.902] - xip mode Verify
+[12:13:03.920] - Read Sha256/7340032
+[12:13:03.921] - Flash xip readsha time cost(ms): 6018.052001953125
+[12:13:03.921] - Finished
+[12:13:03.925] - Sha caled by dev: 93ffaefc05b66615073633edb5f8cb2a71ea67624ce43d16c27344816e5cc7f1
+[12:13:03.925] - Verify success
+[12:13:03.926] - Program Finished
+[12:13:03.926] - All time cost(ms): 45269.026611328125
+[12:13:04.028] - close interface
+[12:13:04.028] - [All Success]
+
+
+C. Console output after RST on the UART used for flashing
+---------------------------------------------------------
+
+[I][] 
+[I][]   ____                   ____               __  __      _       
+[I][]  / __ \                 |  _ \             / _|/ _|    | |      
+[I][] | |  | |_ __   ___ _ __ | |_) | ___  _   _| |_| |_ __ _| | ___  
+[I][] | |  | | '_ \ / _ \ '_ \|  _ < / _ \| | | |  _|  _/ _` | |/ _ \ 
+[I][] | |__| | |_) |  __/ | | | |_) | (_) | |_| | | | || (_| | | (_) |
+[I][]  \____/| .__/ \___|_| |_|____/ \___/ \__,_|_| |_| \__,_|_|\___/ 
+[I][]        | |                                                      
+[I][]        |_|                                                      
+[I][] 
+[I][] Powered by BouffaloLab
+[I][] Build:11:53:59,Apr 11 2023
+[I][] Copyright (c) 2023 OpenBouffalo team
+[I][] Copyright (c) 2022 Bouffalolab team
+[I][] =========== flash cfg ==============
+[I][] jedec id   0xEF4018
+[I][] mid            0xEF
+[I][] iomode         0x04
+[I][] clk delay      0x01
+[I][] clk invert     0x01
+[I][] read reg cmd0  0x05
+[I][] read reg cmd1  0x35
+[I][] write reg cmd0 0x01
+[I][] write reg cmd1 0x31
+[I][] qe write len   0x01
+[I][] cread support  0x00
+[I][] cread code     0xFF
+[I][] burst wrap cmd 0x77
+[I][] sector size:   0x04
+[I][] =====================================
+[I][] dynamic memory init success,heap size = 156 Kbyte 
+[I][MAIN] Starting Mailbox Handlers
+[I][MBOX] Forwarding Interupt SDH (33) to D0 (0x58008bbc)
+[I][MBOX] Forwarding Interupt GPIO (60) to D0 (0x58008d0e)
+[I][MAIN] Running...
+[I][MBOX] Mailbox IRQ Stats:
+[I][MBOX]       Peripheral SDH (33): 0
+[I][MBOX]       Peripheral GPIO (60): 0
+[I][MBOX] Unhandled Interupts: 0 Unhandled Signals 0
+[I][MBOX] ====================================
+
+
+D. Console output after RST on the other UART
+---------------------------------------------
+
+Note: in this case, booting failed with an uSD card problem.
+
+[I][] 
+[I][]   ____                   ____               __  __      _       
+[I][]  / __ \                 |  _ \             / _|/ _|    | |      
+[I][] | |  | |_ __   ___ _ __ | |_) | ___  _   _| |_| |_ __ _| | ___  
+[I][] | |  | | '_ \ / _ \ '_ \|  _ < / _ \| | | |  _|  _/ _` | |/ _ \ 
+[I][] | |__| | |_) |  __/ | | | |_) | (_) | |_| | | | || (_| | | (_) |
+[I][]  \____/| .__/ \___|_| |_|____/ \___/ \__,_|_| |_| \__,_|_|\___/ 
+[I][]        | |                                                      
+[I][]        |_|                                                      
+[I][] 
+[I][] Powered by BouffaloLab
+[I][] Build:11:53:53,Apr 11 2023
+[I][] Copyright (c) 2023 OpenBouffalo team
+[I][] Copyright (c) 2022 Bouffalolab team
+[I][] dynamic memory init success,heap s[I][LowLoad] D0 start...
+[I][LowLoad] low_load start... 
+[I][LowLoad] Header at 0x5d5ff000
+[I][LowLoad] Section dtb(1) - Start 0x5d5ff100, Size 14314
+[I][LowLoad] Copying DTB to 0x51ff8000...0x51ffb7ea
+[I][LowLoad] Done!
+[I][LowLoad] Section OpenSBI(2) - Start 0x5d60f100, Size 109864
+[I][LowLoad] Copying OpenSBI to 0x3ef80000...0x3ef9ad28
+[I][LowLoad] Done!
+[I][LowLoad] Section Kernel(3) - Start 0x5d62f100, Size 315596
+[I][LowLoad] Uncompressing Kernel to 0x50000000...
+[I][LowLoad] Done!
+[I][LowLoad] CRC: 00000000
+[I][LowLoad] load time: 61349 us 
+[I][LowLoad] Setting PMP
+[I][LowLoad] Booting OpenSBI at 0x000000003ef80000 with DTB at 0x51ff8000
+
+OpenSBI v1.2
+   ____                    _____ ____ _____
+  / __ \                  / ____|  _ \_   _|
+ | |  | |_ __   ___ _ __ | (___ | |_) || |
+ | |  | | '_ \ / _ \ '_ \ \___ \|  _ < | |
+ | |__| | |_) |  __/ | | |____) | |_) || |_
+  \____/| .__/ \___|_| |_|_____/|____/_____|
+        | |
+        |_|
+
+Platform Name             : Pine64 Ox64 (D0)
+Platform Features         : medeleg
+Platform HART Count       : 1
+Platform IPI Device       : aclint-mswi
+Platform Timer Device     : aclint-mtimer @ 1000000Hz
+Platform Console Device   : bflb_uart
+Platform HSM Device       : ---
+Platform PMU Device       : ---
+Platform Reboot Device    : ---
+Platform Shutdown Device  : ---
+Firmware Base             : 0x3ef80000
+Firmware Size             : 200 KB
+Runtime SBI Version       : 1.0
+
+Domain0 Name              : root
+Domain0 Boot HART         : 0
+Domain0 HARTs             : 0*
+Domain0 Region00          : 0x00000000e4008000-0x00000000e400bfff (I)
+Domain0 Region01          : 0x00000000e4000000-0x00000000e4007fff (I)
+Domain0 Region02          : 0x000000003ef80000-0x000000003efbffff ()
+Domain0 Region03          : 0x0000000000000000-0xffffffffffffffff (R,W,X)
+Domain0 Next Address      : 0x0000000050000000
+Domain0 Next Arg1         : 0x0000000051ff8000
+Domain0 Next Mode         : S-mode
+Domain0 SysReset          : yes
+
+Boot HART ID              : 0
+Boot HART Domain          : root
+Boot HART Priv Version    : v1.11
+Boot HART Base ISA        : rv64imafdcvx
+Boot HART ISA Extensions  : time
+Boot HART PMP Count       : 8
+Boot HART PMP Granularity : 4096
+Boot HART PMP Address Bits: 38
+Boot HART MHPM Count      : 8
+Boot HART MIDELEG         : 0x0000000000000222
+Boot HART MEDELEG         : 0x000000000000b109
+
+
+U-Boot 2023.04-rc2 (Apr 11 2023 - 06:53:29 -0300)
+
+DRAM:  64 MiB
+Core:  36 devices, 17 uclasses, devicetree: board
+MMC:   mmc@20060000: 0
+Loading Environment from FAT... sdhci_send_command: Timeout for status update!
+sdhci_send_command: Timeout for status update!
+Card did not respond to voltage select! : -110
