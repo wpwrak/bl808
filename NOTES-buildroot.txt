@@ -80,7 +80,8 @@ https://github.com/openbouffalo/buildroot_bouffalo
 - Create & Download
 
 - Copy buildroot/output/images/sdcard.img (1.7 GB !) to the uSD card
-  (note: the instructions speak of a sdcard-pine64-*.img.xz)
+  (note: the instructions speak of a sdcard-pine64-*.img.xz, which is the
+  name used in the pre-built packages)
   E.g.,
   dd if=buildroot/output/images/sdcard.img of=/dev/sdc
 
@@ -91,7 +92,7 @@ https://github.com/openbouffalo/buildroot_bouffalo
 Insert th e uSD card.
 
 Optional: connect a console to the UART used for flashing, e.g.,
-picocom -b 2000000 /dev/ttyACM2
+picocom -b 2000000 /dev/ttyACM3
 
 Connect a console to the other UART, e.g.,
 picocom -b 2000000 /dev/ttyACM2
@@ -114,10 +115,6 @@ The instructions on https://github.com/openbouffalo/buildroot_bouffalo
 - Likewise, the D0 lowload file name is
       d0_lowload_bl808_d0.bin
   not d0_low_load_bl808_d0.bin
-
-- The instructions say that there is an SD card image called
-  sdcard-pine64-*.img.xz
-  but what we have is buildroot/output/images/sdcard.img
 
 
 B. Console output when flashing lowload
