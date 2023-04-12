@@ -54,11 +54,3 @@ D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/1_Specification/Sipeed%20M1s
 N: M1s-Dock-Schematic
 A: m1dsch
 D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/2_Schematic/M1s_Dock_3272_Schematic_V1.pdf
-
-#===== SD-SPI =================================================================
-
-# NEC: SD Memory Card Interface Using SPI 
-
-N: SD-SPI
-A: sdspi
-D: https://www.renesas.com/us/en/document/apn/sd-memory-card-interface-usin
