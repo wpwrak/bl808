@@ -54,3 +54,11 @@ D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/1_Specification/Sipeed%20M1s
 N: M1s-Dock-Schematic
 A: m1dsch
 D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/2_Schematic/M1s_Dock_3272_Schematic_V1.pdf
+
+#===== SD Host Controller =====================================================
+
+# SD Host Controller Simplified Specification Version 4.20
+
+N: SDHC
+A: sdhc
+D: https://www.sdcard.org/cms/wp-content/themes/sdcard-org/dl.php?f=PartA2_SD%20Host_Controller_Simplified_Specification_Ver4.20.pdf
