@@ -55,10 +55,52 @@ N: M1s-Dock-Schematic
 A: m1dsch
 D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/2_Schematic/M1s_Dock_3272_Schematic_V1.pdf
 
-#===== SD Host Controller =====================================================
+#===== SD =====================================================================
+
+# Physical Layer Simplified Specification Version 9.00
+
+N: SD
+A: sd
+D: https://www.sdcard.org/cms/wp-content/themes/sdcard-org/dl.php?f=Part1_Physical_Layer_Simplified_Specification_Ver9.00.pdf
+
+# SDIO Simplified Specification Version 3.00 
+
+N: SDIO
+A: sdio
+D: https://www.sdcard.org/cms/wp-content/themes/sdcard-org/dl.php?f=PartE1_SDIO_Simplified_Specification_Ver3.00.pdf
 
 # SD Host Controller Simplified Specification Version 4.20
 
 N: SDHC
 A: sdhc
 D: https://www.sdcard.org/cms/wp-content/themes/sdcard-org/dl.php?f=PartA2_SD%20Host_Controller_Simplified_Specification_Ver4.20.pdf
+
+#===== M1s Touch Screen =======================================================
+
+# The M1s dock has an optional display module made by Shenzhen P&O Technology
+# Co., Ltd:
+# https://www.polcd.com/sale-26572743-polcd-1-69-inch-240x240-ips-lcd-st7789v-small-lcd-touch-screen-4-line-spi.html
+#
+# It has a Sitronix ST7789V display controller and a Hynitron CST816T touch
+# screen controller. Data sheets for display and controllers can be found in
+# the P169H002-CTP.rar distributed by Sipeed:
+# https://dl.sipeed.com/shareURL/MAIX/M1s/M1s_Dock/6_Chip_Manual/touch_screen
+#
+# Unfortunately, the RAR can not be dowloaded automatically, and some of data
+# sheets are in Chinese. We thus use data sheets from other sources, and in the
+# case of the CST816T, for the hopefully very similar CST816S.
+#
+
+# Sitronix ST7789V
+
+N: ST7789V
+A: st7789v
+A: tft
+D: https://newhavendisplay.com/content/datasheets/ST7789V.pdf
+
+# Hynitron CST816S
+
+N: CST816S
+A: cst816s
+A: touch
+D: https://www.buydisplay.com/download/ic/DS-CST816S_DS_V1.3.pdf
