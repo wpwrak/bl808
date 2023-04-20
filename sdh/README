@@ -1,0 +1,153 @@
+Experimental overrides for SDH
+==============================
+
+Some people experienced problems when trying to use uSD cards on the Ox64 or
+the M1s.
+
+
+Analysis
+--------
+
+We found that CMD on the SD bus changed at the rising edge of CLK, not at the
+falling edge. This is shown in the screenshot cmd-clk.png in this directory.
+We tentatively call this phenomenon a "clock inversion", but it could also be
+caused by a phase shift.
+
+We found that this behaviour occurs if the clock divider from the SDH (SD host
+controller) clock to the SD bus clock is set to a ratio different from 1:1
+(register value 0.)
+
+The SD bus clock can still be controlled by changing the SDH clock, which is
+derived from a 96 MHz clock:
+
+96 MHz ---(SDH_CLK_DIV)---> SDH ---(SDHCI_DIV)---> SD bus
+
+Unfortunately, some people who had not experienced SD card issues before ran
+into problems when we changed the SD bus divider to 1:1. In order to make the
+clock setup more flexible, this set of changes implements overrides that can be
+selected from the U-Boot command line, and thus allow trying different clock
+configurations in a single session.
+
+
+Setup
+-----
+
+We assume that the buildroot repo has been cloned into a subdirectory of bl808,
+named buildroot/
+
+Furthermore, we assume that buildroot_bouffalo has been cloned, too, and that
+a complete build run has been made. I.e., the sources of U-Boot and the Linux
+kernel are now in buildroot/output/build/
+
+
+Patch U-Boot
+------------
+
+We start from the bl808 top-level directory.
+
+cd buildroot
+patch -d output/build/uboot-bl808-2023-02-19 <../sdh/uboot-bflb-sdhci.diff
+make uboot-rebuild
+make
+
+This will generate a buildroot/output/images/bl808-firmware.bin with the
+changed U-Boot. You can now flash and boot it.
+
+
+Patch Linux
+-----------
+
+We start from the bl808 top-level directory.
+
+cd buildroot
+patch -d output/build/linux-6.2 <../sdh/linux-sdhci-bflb.diff
+make linux-rebuild
+make
+
+This will generate a buildroot/output/images/Image with the changed Linux
+kernel. You can now copy it to the top-level directory of the boot partition
+on the uSD card.
+
+
+Patch buildroot_bouffalo
+------------------------
+
+We start from the bl808 top-level directory.
+
+cd buildroot_bouffalo
+patch -p1 <../sdh/buildroot-extlinux.diff
+make -C ../buildroot
+
+This should produce a buildroot/output/images/sdcard.img with the variable
+${bootargs} added to the kernel boot command line options, allowing us to pass
+overrides to the kernel.
+
+You can also edit /extlinux/extlinux.conf on the boot partition of the uSD card
+directly.
+
+
+Undoing the changes
+-------------------
+
+The following commands remove the checked-out sources from buildroot/output/,
+along with the above changes:
+
+cd buildroot
+make uboot-dirclean
+make linux-dirclean
+
+To revert the change in buildroot_bouffalo,
+
+cd buildroot_bouffalo
+git stash
+
+
+Reproducing the original problem
+--------------------------------
+
+On systems that are affected by the clock inversion, if booting without
+activating any overrides, the boot process fails in U-Boot with:
+
+[...]
+Loading Environment from FAT... sdhci_send_command: Timeout for status update!
+sdhci_send_command: Timeout for status update!
+Card did not respond to voltage select! : -110
+[...]
+
+In this case, U-Boot will try for a while to boot from BOOTP, but eventually it
+will stop at the command-line prompt.
+
+The error can also be reproduced with "mmc rescan", which is much faster than a
+boot attempt.
+
+
+Clock overrides in U-Boot
+-------------------------
+
+At the U-Boot command line enter:
+
+bflb_sdh sdh 8
+bflb_sdh bus 1
+
+This sets the SDH clock divider to 1:8, producing a 12 MHz clock for the SDH.
+The bus clock divider is set to 1:1, resulting in a bus clock of 12 MHz as
+well.
+
+"mmc rescan" should now succeed, and "boot" should load and start the Linux
+kernel. However, the kernel will also run into the same problem, and thus fail
+to mount the root filesystem.
+
+
+Clock override in Linux
+-----------------------
+
+While still at the U-Boot command line, enter:
+
+setenv bootargs ${bootargs} sdhci-bflb.bus_div=1
+boot
+
+This instructs the kernel to use a bus clock divider of 1:1 as well. The kernel
+does not change the SDH clock set by U-Boot, so there is no override for this.
+
+The kernel should now boot normally, and mount the root file system from the
+uSD card.
