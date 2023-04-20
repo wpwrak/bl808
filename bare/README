@@ -1,0 +1,19 @@
+BL808 Bare-Metal Code
+=====================
+
+Code that runs on the bare metal, i.e., without relying on drivers or hardware
+access libraries.
+
+We define three levels of bare-metallicity:
+
+- lead: code runs under Linux. The kernel will have set up an execution
+  environment and many registers will be initialized to some sane values. This
+  is mainly to debug the functionality of code that will then be used at the
+  lower level.
+
+- copper: code is launched by loadlow, i.e., it takes the role of U-Boot. This
+  differs from "lead" mainly in having to set up our own execution environment,
+  and maybe some more registers.
+
+- steel: code replaces loadlow. Registers will be at their reset values.
+
