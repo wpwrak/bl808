@@ -39,6 +39,9 @@ Furthermore, we assume that buildroot_bouffalo has been cloned, too, and that
 a complete build run has been made. I.e., the sources of U-Boot and the Linux
 kernel are now in buildroot/output/build/
 
+See ../NOTES-buildroot.txt in this repository for details on how to clone and
+build buildroot.
+
 
 Patch U-Boot
 ------------
@@ -46,7 +49,7 @@ Patch U-Boot
 We start from the bl808 top-level directory.
 
 cd buildroot
-patch -d output/build/uboot-bl808-2023-02-19 <../sdh/uboot-bflb-sdhci.diff
+patch -p0 -d output/build/uboot-bl808-2023-02-19 <../sdh/uboot-bflb-sdhci.diff
 make uboot-rebuild
 make
 
@@ -60,7 +63,7 @@ Patch Linux
 We start from the bl808 top-level directory.
 
 cd buildroot
-patch -d output/build/linux-6.2 <../sdh/linux-sdhci-bflb.diff
+patch -p0 -d output/build/linux-6.2 <../sdh/linux-sdhci-bflb.diff
 make linux-rebuild
 make
 
@@ -133,6 +136,12 @@ This sets the SDH clock divider to 1:8, producing a 12 MHz clock for the SDH.
 The bus clock divider is set to 1:1, resulting in a bus clock of 12 MHz as
 well.
 
+Each time U-Boot is applying overrides (this typically happens several times
+per card detection), it prints how the register value has changed, e.g.,
+
+SDH_CFG0: 0x00002000 -> 0x00002e00
+SDHCI_CLOCK_CONTROL: 0x0000 -> 0x0000
+
 "mmc rescan" should now succeed, and "boot" should load and start the Linux
 kernel. However, the kernel will also run into the same problem, and thus fail
 to mount the root filesystem.
@@ -148,6 +157,11 @@ boot
 
 This instructs the kernel to use a bus clock divider of 1:1 as well. The kernel
 does not change the SDH clock set by U-Boot, so there is no override for this.
+
+Each time the kernel is applying overrides (this happens several times per card
+detection), it prints how the register value has changed, e.g.,
+
+[    0.433624] sdhci-bflb 20060000.sdhci: SDHCI_CLOCK_CONTROL: 0x0000 -> 0x0000
 
 The kernel should now boot normally, and mount the root file system from the
 uSD card.
