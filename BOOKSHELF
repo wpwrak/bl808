@@ -55,6 +55,20 @@ N: M1s-Dock-Schematic
 A: m1dsch
 D: https://dl.sipeed.com/fileList/MAIX/M1s/M1s_Dock/2_Schematic/M1s_Dock_3272_Schematic_V1.pdf
 
+#===== RISV-V =================================================================
+
+# RISC-V ISA: Volume 1, Unprivileged Specification version 20191213
+
+N: RV-ISA-UNPRIV
+A: rvisa
+D: https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf
+
+# RISC-V ISA: Volume 2, Privileged Specification version 20211203
+
+N: RV-ISA-PRIV
+A: rvpriv
+D: https://github.com/riscv/riscv-isa-manual/releases/download/Priv-v1.12/riscv-privileged-20211203.pdf
+
 #===== SD =====================================================================
 
 # Physical Layer Simplified Specification Version 9.00
