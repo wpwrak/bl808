@@ -144,8 +144,8 @@ section. If things run successfully, the output should be as follows:
 [20:20:51.602] - [All Success]
 
 
-4. Running the hello wold firmware
-----------------------------------
+4. Running the hello world firmware
+-----------------------------------
 
 picocom implements a straightforward serial console and supports the high UART
 bit rate of 2 Mbps the BL808 uses. We can connect to both ttyACMs:
