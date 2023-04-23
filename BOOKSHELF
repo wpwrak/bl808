@@ -112,9 +112,10 @@ A: st7789v
 A: tft
 D: https://newhavendisplay.com/content/datasheets/ST7789V.pdf
 
-# Hynitron CST816S
+# Hynitron CST816S (version 1.4)
 
 N: CST816S
 A: cst816s
 A: touch
-D: https://www.buydisplay.com/download/ic/DS-CST816S_DS_V1.3.pdf
+#D: https://www.buydisplay.com/download/ic/DS-CST816S_DS_V1.3.pdf
+D: https://www.waveshare.com/w/upload/5/51/CST816S_Datasheet_EN.pdf
