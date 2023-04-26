@@ -1,12 +1,10 @@
 #ifndef GPIO_H
 #define	GPIO_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
-/*
- * We should include mmio.h here, but don't, to avoid things appearing to work
- * if mmio.h wasn't included before, which can result in using the wrong mmio.h
- */
+#include "mmio.h"
 
 
 /* BL808 RM, 4.7.1 */
@@ -37,6 +35,9 @@ enum GPIO_INT_MODE {
 	GPIO_INT_MODE_A_HIGH	= 7,
 };
 #define	GPIO_MASK_FN		(0x1f << 8)
+enum GPIO_FN {
+	GPIO_FN_GPIO		= 11,
+};
 #define	GPIO_MASK_OE		(1 << 6)
 #define	GPIO_MASK_PULL		(3 << 4)
 enum GPIO_PULL {
@@ -55,5 +56,26 @@ enum GPIO_PULL {
 
 #define	GPIO_CFG(n) \
 	(*(volatile uint32_t *) ((mmio_m0_base + 0x8c4) + (4 * (n))))
+
+
+void gpio_cfg_off(unsigned pin);
+void gpio_cfg_in(unsigned pin, enum GPIO_PULL pull);
+void gpio_cfg_out(unsigned pin, bool on, int drive);
+
+
+static inline bool gpio_in(unsigned pin)
+{
+	return GPIO_CFG(pin) & GPIO_MASK_I;
+}
+
+
+static inline void gpio_out(unsigned pin, bool on)
+{
+	if (on)
+		GPIO_CFG(pin) |= GPIO_ADD(O, 1);
+	else
+		GPIO_CFG(pin) &= GPIO_DEL(O);
+}
+
 
 #endif /* !GPIO_H */

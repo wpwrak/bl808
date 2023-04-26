@@ -17,21 +17,15 @@
 
 int main(void)
 {
-	uint32_t value;
-	bool on = 0;
+	bool on = 1;
 	unsigned i;
 
 	mmio_init();
-	value = GPIO_CFG(LED);
-	value &= GPIO_DEL(MODE) | GPIO_DEL(FN) | GPIO_DEL(OE);
-	value |= GPIO_ADD(MODE, GPIO_MODE_OUT) |
-	    GPIO_ADD(FN, 0) | GPIO_ADD(OE, 1);
-	GPIO_CFG(LED) = value;
+	gpio_cfg_out(LED, 0, 3);
 
 	while (1) {
 		on = !on;
-		value = (value & GPIO_DEL(O)) | GPIO_ADD(O, on);
-		GPIO_CFG(LED) = value;
+		gpio_out(LED, on);
 		for (i = 0; i != 1000 * 1000 * DELAY_LOOP_HZ; i++)
 			asm("");
 	}

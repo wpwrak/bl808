@@ -3,7 +3,7 @@ CC = riscv64-unknown-linux-gnu-gcc
 
 CFLAGS = -O9 -Wall -Wextra -Wshadow -Wno-unused-parameter \
 	 -Wmissing-prototypes -Wmissing-declarations
-OBJS = led.o mmio.o
+OBJS = led.o mmio.o gpio.o
 
 
 .PHONY:		all clean spotless
