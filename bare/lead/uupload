@@ -1,0 +1,43 @@
+#!/bin/bash
+# bash for read -r
+
+
+usage()
+{
+	echo "usage: $0 tty file" 1>&2
+	exit 1
+}
+
+
+while [ "$1" ]; do
+	case "$1" in
+	-*)	usage;;
+	*)	break;;
+	esac
+done
+
+[ "$2" ] || usage
+[ "$3" ] && usage
+
+if [ -c "$1" ]; then
+	tty=$1
+elif [ -c /dev/tty"$1" ]; then
+	tty=/dev/tty$1
+else
+	echo "$1: not a tty" 1>&2
+	exit 1
+fi
+
+if [ ! -f "$2" ]; then
+	echo "$2: not found" 1>&2
+	exit 1
+fi
+
+(
+	echo stty -echo
+	sleep 0.1
+	echo uudecode
+	# slow down so that we don't overrun anything
+	uuencode "$2" "$2" | while read -r l; do echo "$l"; sleep 0.01; done
+	echo stty echo
+) >"$tty"
