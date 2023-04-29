@@ -36,6 +36,15 @@ enum GPIO_INT_MODE {
 };
 #define	GPIO_MASK_FN		(0x1f << 8)
 enum GPIO_FN {
+	GPIO_FN_SPI_SS		= 1,
+	GPIO_FN_SPI_MOSI	= 1,
+	GPIO_FN_SPI_MISO	= 1,
+	GPIO_FN_SPI_SCLK	= 1,
+	GPIO_FN_I2S_BCLK	= 3,
+	GPIO_FN_I2C0_SCL	= 5,
+	GPIO_FN_I2C0_SDA	= 5,
+	GPIO_FN_I2C1_SCL	= 6,
+	GPIO_FN_I2C1_SDA	= 6,
 	GPIO_FN_GPIO		= 11,
 };
 #define	GPIO_MASK_OE		(1 << 6)
@@ -61,6 +70,7 @@ enum GPIO_PULL {
 void gpio_cfg_off(unsigned pin);
 void gpio_cfg_in(unsigned pin, enum GPIO_PULL pull);
 void gpio_cfg_out(unsigned pin, bool on, int drive);
+void gpio_cfg_fn(unsigned pin, enum GPIO_FN fn);
 
 
 static inline bool gpio_in(unsigned pin)
