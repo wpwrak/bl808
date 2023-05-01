@@ -1,5 +1,4 @@
-#CC = riscv64-unknown-elf-gcc
-CC = riscv64-unknown-linux-gnu-gcc
+CROSS = riscv64-unknown-linux-gnu-
 
 CFLAGS = -O9 -Wall -Wextra -Wshadow -Wno-unused-parameter \
 	 -Wmissing-prototypes -Wmissing-declarations
@@ -8,9 +7,12 @@ LED_OBJS = led.o $(COMMON_OBJS)
 DISP_OBJS = disp.o $(COMMON_OBJS) spi.o lcd.o
 ALL_OBJS = led.o disp.o spi.o lcd.o $(COMMON_OBJS)
 
+include Makefile.c-common
+
+
 .PHONY:		all clean spotless
 
-all:		led disp
+all::		led disp touch
 
 led:		$(LED_OBJS)
 
@@ -28,9 +30,9 @@ IMG = https://upload.wikimedia.org/wikipedia/commons/e/e8/Citrine_1_%28Russie%29
 citrine.jpg:
 		wget -O $@ "$(IMG)" || { rm -f $@; exit 1; }
 
-clean:
+clean::
 		rm -f $(ALL_OBJS) citrine.inc
 
-spotless:	clean
+spotless::	clean
 		rm -f led
 		rm -f disp
