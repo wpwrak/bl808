@@ -46,6 +46,10 @@ enum GPIO_FN {
 	GPIO_FN_I2C1_SCL	= 6,
 	GPIO_FN_I2C1_SDA	= 6,
 	GPIO_FN_GPIO		= 11,
+	GPIO_FN_I2C2_SCL	= 19,
+	GPIO_FN_I2C2_SDA	= 19,
+	GPIO_FN_I2C3_SCL	= 20,
+	GPIO_FN_I2C3_SDA	= 20,
 };
 #define	GPIO_MASK_OE		(1 << 6)
 #define	GPIO_MASK_PULL		(3 << 4)
@@ -63,8 +67,22 @@ enum GPIO_PULL {
 	(__builtin_ffs(GPIO_MASK_##field) - 1)))
 #define	GPIO_DEL(field) (~GPIO_MASK_##field)
 
-#define	GPIO_CFG(n) \
+#define GPIO_CFG(n) \
 	(*(volatile uint32_t *) ((mmio_m0_base + 0x8c4) + (4 * (n))))
+
+/*
+ * The registers with just the IO bits, without the remaining configuration
+ * items are cryptically named gpio_cfg128 and such. We use better names.
+ */
+
+#define GPIO_IN0	GPIO_CFG(128)
+#define GPIO_IN1	GPIO_CFG(129)
+#define GPIO_OUT0	GPIO_CFG(136)
+#define GPIO_OUT1	GPIO_CFG(137)
+#define	GPIO_SET0	GPIO_CFG(138)
+#define	GPIO_SET1	GPIO_CFG(139)
+#define	GPIO_CLR0	GPIO_CFG(140)
+#define	GPIO_CLR1	GPIO_CFG(141)
 
 
 void gpio_cfg_off(unsigned pin);
@@ -79,13 +97,30 @@ static inline bool gpio_in(unsigned pin)
 }
 
 
+static inline void gpio_set(unsigned pin)
+{
+	if (pin < 32)
+		GPIO_SET0 = 1 << pin;
+	else
+		GPIO_SET1 = 1 << (pin - 32);
+}
+
+
+static inline void gpio_clr(unsigned pin)
+{
+	if (pin < 32)
+		GPIO_CLR0 = 1 << pin;
+	else
+		GPIO_CLR1 = 1 << (pin - 32);
+}
+
+
 static inline void gpio_out(unsigned pin, bool on)
 {
 	if (on)
-		GPIO_CFG(pin) |= GPIO_ADD(O, 1);
+		gpio_set(pin);
 	else
-		GPIO_CFG(pin) &= GPIO_DEL(O);
+		gpio_clr(pin);
 }
-
 
 #endif /* !GPIO_H */
