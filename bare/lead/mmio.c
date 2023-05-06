@@ -12,10 +12,14 @@
  */
 
 #define	MMIO_M0_BASE	(0x20000000)
-#define	MMIO_M0_SIZE	(0x71900)	/* DMA_C7RSVD - DMO0 + DMA1*/
+#define	MMIO_M0_SIZE	(0x71900)	/* DMA_C7RSVD - DMA0 + DMA1 */
+
+#define	MMIO_D0_BASE	(0x30000000)
+#define	MMIO_D0_SIZE	(0x9fff)	/* 0xfff - DMA2 + TIMER1 */
 
 
 volatile void *mmio_m0_base;
+volatile void *mmio_d0_base;
 
 
 void mmio_init(void)
@@ -30,6 +34,12 @@ void mmio_init(void)
 	mmio_m0_base = mmap(NULL, MMIO_M0_SIZE, PROT_READ | PROT_WRITE,
 	    MAP_SHARED, fd, MMIO_M0_BASE);
 	if (mmio_m0_base == MAP_FAILED) {
+		perror("mmap");
+		exit(1);
+	}
+	mmio_d0_base = mmap(NULL, MMIO_D0_SIZE, PROT_READ | PROT_WRITE,
+	    MAP_SHARED, fd, MMIO_D0_BASE);
+	if (mmio_d0_base == MAP_FAILED) {
 		perror("mmap");
 		exit(1);
 	}

@@ -5,7 +5,8 @@ CFLAGS = -O9 -Wall -Wextra -Wshadow -Wno-unused-parameter \
 COMMON_OBJS = mmio.o gpio.o
 LED_OBJS = led.o $(COMMON_OBJS)
 DISP_OBJS = disp.o $(COMMON_OBJS) spi.o lcd.o
-ALL_OBJS = led.o disp.o spi.o lcd.o $(COMMON_OBJS)
+TOUCH_OBJS = touch.c $(COMMON_OBJS) i2c.o cst816.o
+ALL_OBJS = led.o disp.o touch.o spi.o lcd.o i2c.o $(COMMON_OBJS)
 
 include Makefile.c-common
 
@@ -19,6 +20,8 @@ led:		$(LED_OBJS)
 disp:		$(DISP_OBJS)
 
 disp.o:		citrine.inc
+
+touch:		$(TOUCH_OBJS)
 
 citrine.inc:	citrine.jpg pnmtorgb.pl
 		jpegtopnm citrine.jpg | \
@@ -36,3 +39,4 @@ clean::
 spotless::	clean
 		rm -f led
 		rm -f disp
+		rm -f touch

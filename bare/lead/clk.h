@@ -26,6 +26,12 @@
 #define	CLK_SDH_MASK_SEL	(1 << 12)
 #define	CLK_SDH_MASK_DIV	(7 << 9)
 
+#define	CLK_I2C_CFG \
+	(*(volatile uint32_t *) (mmio_m0_base + 0x180))
+#define	CLK_I2C_MASK_SEL	(1 << 25)
+#define	CLK_I2C_MASK_EN		(1 << 24)
+#define	CLK_I2C_MASK_DIV	(0xff << 16)
+
 #define	GLB_PARM \
 	(*(volatile uint32_t *) (mmio_m0_base + 0x510))
 #define	GLB_PARM_MASK_SPI0_MASTER	(1 << 12)
