@@ -4,7 +4,6 @@
 #include "mmio.h"
 #include "i2c.h"
 #include "cst816.h"
-#include "touch.h"
 
 
 #define TOUCH_I2C_ADDR	0x15	/* first register to read */
@@ -15,17 +14,17 @@
 #define I2C0_SCL	6	/* IO7_CAM_I2C0_SDA */
 
 
-static void decode_event(const struct touch_event *e)
+static void decode_event(const struct cst816_event *e)
 {
 	printf("\t");
 	switch (e->action) {
-	case touch_down:
+	case cst816_down:
 		printf("DOWN");
 		break;
-	case touch_up:
+	case cst816_up:
 		printf("UP");
 		break;
-	case touch_contact:
+	case cst816_contact:
 		printf("CONTACT");
 		break;
 	default:
@@ -36,33 +35,33 @@ static void decode_event(const struct touch_event *e)
 }
 
 
-static void decode_touch(const struct touch *t)
+static void decode_touch(const struct cst816_touch *t)
 {
 	unsigned i;
 
 	switch (t->gesture) {
-	case touch_g_none:
+	case cst816_g_none:
 		printf("NONE");
 		break;
-	case touch_g_down:
+	case cst816_g_down:
 		printf("SLIDE DOWN");
 		break;
-	case touch_g_up:
+	case cst816_g_up:
 		printf("SLIDE UP");
 		break;
-	case touch_g_left:
+	case cst816_g_left:
 		printf("SLIDE LEFT");
 		break;
-	case touch_g_right:
+	case cst816_g_right:
 		printf("SLIDE RIGHT");
 		break;
-	case touch_g_single:
+	case cst816_g_single:
 		printf("SINGLE");
 		break;
-	case touch_g_double:
+	case cst816_g_double:
 		printf("DOUBLE");
 		break;
-	case touch_g_long:
+	case cst816_g_long:
 		printf("LONG");
 		break;
 	default:
@@ -83,7 +82,7 @@ int main(void)
 	i2c_init(0, I2C0_SDA, I2C0_SCL, 100);
 	cst816_init(TOUCH_I2C, TOUCH_I2C_ADDR, TOUCH_INT);
 	while (1) {
-		struct touch t;
+		struct cst816_touch t;
 
 		on = !cst816_poll();
 		if (on == last)
