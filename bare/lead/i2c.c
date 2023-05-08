@@ -48,6 +48,17 @@ enum I2C_SUB_ADDR_LEN {
 #define	I2C_PRD_DATA(i2c) \
 	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x18))
 
+#define I2C_CFG0(i2c) \
+	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x80))
+#define	I2C_MASK_CFG0_RX_FIFO_UNDER	(1 << 7)
+#define	I2C_MASK_CFG0_RX_FIFO_OVER	(1 << 6)
+#define	I2C_MASK_CFG0_TX_FIFO_UNDER	(1 << 5)
+#define	I2C_MASK_CFG0_TX_FIFO_OVER	(1 << 4)
+#define	I2C_MASK_CFG0_RX_FIFO_CLR	(1 << 3)
+#define	I2C_MASK_CFG0_TX_FIFO_CLR	(1 << 2)
+#define	I2C_MASK_CFG0_RX_DMA_EN		(1 << 1)
+#define	I2C_MASK_CFG0_TX_DMA_EN		(1 << 0)
+
 #define I2C_CFG1(i2c) \
 	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x84))
 #define I2C_MASK_CFG1_RX_FIFO_TH        (1 << 24)
@@ -78,7 +89,8 @@ static void i2c_setup(unsigned i2c, unsigned addr, unsigned reg, bool rd,
 	I2C_SUB_ADDR(i2c) = reg;
 	cfg = I2C_CONFIG(i2c);
 	cfg &= I2C_DEL(CFG_PKT_LEN) & I2C_DEL(CFG_SLV_ADDR) &
-	    I2C_DEL(CFG_SUB_ADDR_LEN) & I2C_DEL(CFG_10B_EN) & I2C_DEL(CFG_M_EN);
+	    I2C_DEL(CFG_SUB_ADDR_LEN) & I2C_DEL(CFG_10B_EN) &
+	    I2C_DEL(CFG_M_EN) & I2C_DEL(CFG_RnW);
 	cfg |= I2C_ADD(CFG_PKT_LEN, len - 1) | I2C_ADD(CFG_SLV_ADDR, addr) |
 	    I2C_ADD(CFG_SUB_ADDR_LEN, I2C_SUB_ADDR_LEN_1) |
 	    I2C_ADD(CFG_SUB_ADDR_EN, 1) | I2C_ADD(CFG_SCL_SYNC_EN, 1) |
@@ -198,6 +210,11 @@ void i2c_init(unsigned i2c, unsigned sda, unsigned scl, unsigned kHz)
 	gpio_cfg_fn(scl, fn[i2c]);
 
 	/* clean up in case we got interrupted before */
+
 	i2c_end(i2c);
 	I2C_BUS_BUSY(i2c) = I2C_MASK_BUS_BUSY_CLR;
+	mdelay(1);
+
+	I2C_CFG0(i2c) = I2C_ADD(CFG0_RX_FIFO_CLR, 1) |
+	    I2C_ADD(CFG0_TX_FIFO_CLR, 1);
 }
