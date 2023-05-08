@@ -6,14 +6,16 @@ COMMON_OBJS = mmio.o gpio.o
 LED_OBJS = led.o $(COMMON_OBJS)
 DISP_OBJS = disp.o $(COMMON_OBJS) spi.o lcd.o
 TOUCH_OBJS = touch.c $(COMMON_OBJS) i2c.o cst816.o
-ALL_OBJS = led.o disp.o touch.o spi.o lcd.o i2c.o $(COMMON_OBJS)
+ACCEL_OBJS = accel.c $(COMMON_OBJS) i2c.o bma400.o
+ALL_OBJS = led.o disp.o touch.o accel.o spi.o lcd.o i2c.o cst816.o bma400.o \
+	   $(COMMON_OBJS)
 
 include Makefile.c-common
 
 
 .PHONY:		all clean spotless
 
-all::		led disp touch
+all::		led disp touch accel
 
 led:		$(LED_OBJS)
 
@@ -22,6 +24,8 @@ disp:		$(DISP_OBJS)
 disp.o:		citrine.inc
 
 touch:		$(TOUCH_OBJS)
+
+accel:		$(ACCEL_OBJS)
 
 citrine.inc:	citrine.jpg pnmtorgb.pl
 		jpegtopnm citrine.jpg | \
@@ -37,6 +41,4 @@ clean::
 		rm -f $(ALL_OBJS) citrine.inc
 
 spotless::	clean
-		rm -f led
-		rm -f disp
-		rm -f touch
+		rm -f led disp touch accel
