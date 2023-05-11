@@ -86,8 +86,6 @@ bool bma400_poll(struct bma400_sample *s)
 	uint8_t status;
 
 	i2c_read(bma400_i2c, bma400_addr, BMA400_STATUS, &status, 1);
-// @@@ for some reason, we need this delay or polling will hang
-mdelay(1);
 	if (!(status & BMA400_STATUS_DRDY_STAT))
 		return 0;
 	i2c_read(bma400_i2c, bma400_addr, BMA400_ACC, s, 3 * 2);

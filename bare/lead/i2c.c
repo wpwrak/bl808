@@ -139,6 +139,8 @@ unsigned i2c_write(unsigned i2c, unsigned addr, unsigned reg,
 		left -= 4;
 		d += 4;
 	}
+	// @@@ probably needed to empty shift register and process ACK
+	mdelay(1);
 	i2c_end(i2c);
 	return len;
 }
@@ -179,6 +181,8 @@ bool i2c_read(unsigned i2c, unsigned addr, unsigned reg,
 		len -= 4;
 		d += 4;
 	}
+	// @@@ end-of-message sync ? can be before or after i2c_end
+	mdelay(1);
 	i2c_end(i2c);
 	return 1;
 }
