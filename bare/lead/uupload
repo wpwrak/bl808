@@ -50,5 +50,7 @@ fi
 	echo uudecode
 	# slow down so that we don't overrun anything
 	uuencode "$1" "$1" | while read -r l; do echo "$l"; sleep 0.01; done
+	echo md5sum "$1"
 	echo stty echo
 ) >"$tty"
+md5sum "$1"
