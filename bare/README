@@ -11,9 +11,30 @@ We define three levels of bare-metallicity:
   is mainly to debug the functionality of code that will then be used at the
   lower level.
 
-- copper: code is launched by loadlow, i.e., it takes the role of U-Boot. This
-  differs from "lead" mainly in having to set up our own execution environment,
-  and maybe some more registers.
+- copper: code is launched by lowload or the SDK, i.e., we omit U-Boot and
+  Linux. This differs from "lead" mainly in having to set up our own execution
+  environment, and maybe some more registers.
 
-- steel: code replaces loadlow. Registers will be at their reset values.
+- steel: code is run directly by the ROM, replacing lowload and such. Registers
+  will be at their reset values.
 
+
+Status
+------
+
+None of the drivers in this proof-of-concept implementation use interrupts or
+DMA. They also don't implement functionality we don't expect to need for the
+proof of concept. All this is at the "lead" level.
+
+Peripheral	Where	Status
+----------	-----	-------------------------------------------------------
+GPIO		BL808	supports all relevant features
+  LED		M1s	works in "lead"
+SPI0		BL808	Tx-only, SPI-GPIO synchronization via delays
+  ST7789V	M1s	basic setup
+I2C0		BL808	read and write, see i2c.c for known issues
+  CST816	M1s	default settings (single finger, tap and slide)
+  BMA400	Sunela	produces samples
+  ATECC608B	Sunela	can request and obtain the chip ID
+
+BMA400 and ATECC608B are local additions.
