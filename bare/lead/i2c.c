@@ -1,3 +1,21 @@
+/*
+ * i2c.c - Driver for BL808 I2C
+ */
+
+/*
+ * Proof of concept. Known issues:
+ * - mystery delay needed after writes
+ * - when writing, we preload all the data into the FIFO, limiting the
+ *   maximum message size. We should just enable the master on FIFO full or at
+ *   the end of the data loop, whichever comes first.
+ * - the use of the subaddress functionality for the register value makes this
+ *   driver unnecessarily complicated. We should try to turn off subaddresses
+ *   and let higher layers worry about selecting registers. Unfortunately, it
+ *   seems that the I2C IP wouldn't like such a setup, at least it doesn't with
+ *   the current zero-data hack. More research is needed.
+ * - we don't detect error conditions (NAK, timeout)
+ */
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
@@ -32,6 +50,32 @@ enum I2C_SUB_ADDR_LEN {
 #define	I2C_MASK_CFG_DEG_EN		(1 << 2)
 #define	I2C_MASK_CFG_RnW		(1 << 1)
 #define	I2C_MASK_CFG_M_EN		(1 << 0)
+
+#define	I2C_INT_STS(i2c) \
+	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x4))
+#define	I2C_MASK_INT_FER_EN		(1 << 29)	/* enable */
+#define	I2C_MASK_INT_ARB_EN		(1 << 28)
+#define	I2C_MASK_INT_NAK_EN		(1 << 27)
+#define	I2C_MASK_INT_RXF_EN		(1 << 26)
+#define	I2C_MASK_INT_TXF_EN		(1 << 25)
+#define	I2C_MASK_INT_END_EN		(1 << 24)
+#define	I2C_MASK_INT_ARB_CLR		(1 << 20)	* clear */
+#define	I2C_MASK_INT_NAK_CLR		(1 << 19)
+#define	I2C_MASK_INT_RXF_CLR		(1 << 18)
+#define	I2C_MASK_INT_TXF_CLR		(1 << 17)
+#define	I2C_MASK_INT_END_CLR		(1 << 16)
+#define	I2C_MASK_INT_FER_MASK		(1 << 13)	/* mask */
+#define	I2C_MASK_INT_ARB_MASK		(1 << 12)
+#define	I2C_MASK_INT_NAK_MASK		(1 << 11)
+#define	I2C_MASK_INT_RXF_MASK		(1 << 10)
+#define	I2C_MASK_INT_TXF_MASK		(1 << 9)
+#define	I2C_MASK_INT_END_MASK		(1 << 8)
+#define	I2C_MASK_INT_FER		(1 << 5)	/* status; FIFO error */
+#define	I2C_MASK_INT_ARB		(1 << 4)	/* arbitration lost */
+#define	I2C_MASK_INT_NAK		(1 << 3)	/* NACK */
+#define	I2C_MASK_INT_RXF		(1 << 2)	/* RX FIFO ready */
+#define	I2C_MASK_INT_TXF		(1 << 1)	/* TX FIFO ready */
+#define	I2C_MASK_INT_END		(1 << 0)	/* transfer end */
 
 #define	I2C_SUB_ADDR(i2c) \
 	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x8))
@@ -80,20 +124,33 @@ enum I2C_SUB_ADDR_LEN {
 #define	XCLK_kHz	40000	/* 40 MHz XTAL clock */
 
 
+static void i2c_clear_fifos(unsigned i2c)
+{
+	I2C_CFG0(i2c) = I2C_ADD(CFG0_RX_FIFO_CLR, 1) |
+	    I2C_ADD(CFG0_TX_FIFO_CLR, 1);
+}
+
+
 static void i2c_setup(unsigned i2c, unsigned addr, unsigned reg, bool rd,
     unsigned len)
 {
 	uint32_t cfg;
 
-	assert(len);
+	/* clear fifos */
+//	i2c_clear_fifos(i2c);
+	I2C_INT_STS(i2c) |= I2C_MASK_INT_END_CLR;
+
+//	assert(len);
 	I2C_SUB_ADDR(i2c) = reg;
 	cfg = I2C_CONFIG(i2c);
 	cfg &= I2C_DEL(CFG_PKT_LEN) & I2C_DEL(CFG_SLV_ADDR) &
-	    I2C_DEL(CFG_SUB_ADDR_LEN) & I2C_DEL(CFG_10B_EN) &
-	    I2C_DEL(CFG_M_EN) & I2C_DEL(CFG_RnW);
-	cfg |= I2C_ADD(CFG_PKT_LEN, len - 1) | I2C_ADD(CFG_SLV_ADDR, addr) |
+	    I2C_DEL(CFG_SUB_ADDR_LEN) & I2C_DEL(CFG_SUB_ADDR_EN) &
+	    I2C_DEL(CFG_10B_EN) & I2C_DEL(CFG_M_EN) & I2C_DEL(CFG_RnW);
+	cfg |= I2C_ADD(CFG_PKT_LEN, len ? len - 1 : 0) |
+	    I2C_ADD(CFG_SLV_ADDR, addr) |
 	    I2C_ADD(CFG_SUB_ADDR_LEN, I2C_SUB_ADDR_LEN_1) |
-	    I2C_ADD(CFG_SUB_ADDR_EN, 1) | I2C_ADD(CFG_SCL_SYNC_EN, 1) |
+	    I2C_ADD(CFG_SUB_ADDR_EN, len ? 1 : 0) |
+	    I2C_ADD(CFG_SCL_SYNC_EN, 1) |
 	    I2C_ADD(CFG_DEG_EN, 1) | I2C_ADD(CFG_RnW, rd);
 	I2C_CONFIG(i2c) = cfg;
 //printf("CFG(0) 0x%08x\n", cfg);
@@ -103,9 +160,16 @@ static void i2c_setup(unsigned i2c, unsigned addr, unsigned reg, bool rd,
 }
 
 
-static void i2c_end(unsigned i2c)
+static void i2c_disable(unsigned i2c)
 {
 	I2C_CONFIG(i2c) &= I2C_DEL(CFG_M_EN);
+}
+
+
+static void i2c_end(unsigned i2c)
+{
+	while (!(I2C_INT_STS(i2c) & I2C_MASK_INT_END));
+	i2c_disable(i2c);
 }
 
 
@@ -115,7 +179,22 @@ unsigned i2c_write(unsigned i2c, unsigned addr, unsigned reg,
 	const uint8_t *d = data;
 	unsigned left = 0;
 
-	i2c_setup(i2c, addr, reg, 0, len);
+	i2c_clear_fifos(i2c);
+
+	// @@@ the I2C IP doesn't seem to like not having data in the FIFO when
+	// it is ready to fetch something. instead, it outputs old data, and
+	// can even change the message length. very confusing. for now, we just
+	// pre-load the FIFO, but this only works for a few bytes.
+//	i2c_setup(i2c, addr, reg, 0, len);
+
+	// @@@ BL808 I2C doesn't let us send messages with no data. So instead,
+	// we make a message without sub-address ("register"), and send the
+	// sub-address as payload byte. Maybe we should just not use the
+	// sub-address feature ?
+	if (!len) {
+		data = &reg;
+		len++;
+	}
 	while (1) {
 		uint32_t word = d[0];
 
@@ -133,15 +212,22 @@ unsigned i2c_write(unsigned i2c, unsigned addr, unsigned reg,
 			break;
 		}
 		while (!I2C_GET(CFG1_TX_FIFO_CNT, I2C_CFG1(0)));
+//printf("  %08x\n", word);
 		I2C_WDATA(i2c) = word;
 		if (left <= 4)
 			break;
 		left -= 4;
 		d += 4;
 	}
-	// @@@ probably needed to empty shift register and process ACK
-	mdelay(1);
+
+	// @@@ undo zero-data hack
+	if (data == &reg)
+		len--;
+
+	i2c_setup(i2c, addr, reg, 0, len);
 	i2c_end(i2c);
+// @@@ we still seem to need this :-( else, transmission may get garbled
+	mdelay(1);
 	return len;
 }
 
@@ -153,7 +239,6 @@ bool i2c_read(unsigned i2c, unsigned addr, unsigned reg,
 
 //printf("F0: 0x%08x\n", I2C_CFG1(0));
 	i2c_setup(i2c, addr, reg, 1, len);
-//mdelay(1);
 	while (1) {
 		uint32_t word;
 
@@ -181,8 +266,6 @@ bool i2c_read(unsigned i2c, unsigned addr, unsigned reg,
 		len -= 4;
 		d += 4;
 	}
-	// @@@ end-of-message sync ? can be before or after i2c_end
-	mdelay(1);
 	i2c_end(i2c);
 	return 1;
 }
@@ -202,7 +285,6 @@ void i2c_init(unsigned i2c, unsigned sda, unsigned scl, unsigned kHz)
 	 */
 	phase = (XCLK_kHz / kHz / 4) - 1;
 	phase = phase > 255 ? 255 : phase ? phase : 1;
-//printf("phase %u\n", phase);
 	I2C_PRD_START(i2c) = I2C_PRD_STOP(i2c) = I2C_PRD_DATA(i2c) =
 	    0x1010101 * phase;
 
@@ -215,10 +297,7 @@ void i2c_init(unsigned i2c, unsigned sda, unsigned scl, unsigned kHz)
 
 	/* clean up in case we got interrupted before */
 
-	i2c_end(i2c);
+	i2c_disable(i2c);
 	I2C_BUS_BUSY(i2c) = I2C_MASK_BUS_BUSY_CLR;
-	mdelay(1);
-
-	I2C_CFG0(i2c) = I2C_ADD(CFG0_RX_FIFO_CLR, 1) |
-	    I2C_ADD(CFG0_TX_FIFO_CLR, 1);
+	i2c_clear_fifos(i2c);
 }
