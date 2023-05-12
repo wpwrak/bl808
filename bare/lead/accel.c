@@ -10,7 +10,7 @@
 #define	ACCEL_INT	31	/* IO31 */
 
 #define	ACCEL_I2C	0
-#define I2C0_SDA	7	/* O7_CAM_I2C0_SDA */
+#define I2C0_SDA	7	/* IO7_CAM_I2C0_SDA */
 #define I2C0_SCL	6	/* IO7_CAM_I2C0_SDA */
 
 

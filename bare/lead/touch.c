@@ -10,7 +10,7 @@
 #define TOUCH_INT	32	/* IO32_TP_TINT */
 
 #define TOUCH_I2C	0
-#define I2C0_SDA	7	/* O7_CAM_I2C0_SDA */
+#define I2C0_SDA	7	/* IO7_CAM_I2C0_SDA */
 #define I2C0_SCL	6	/* IO7_CAM_I2C0_SDA */
 
 
