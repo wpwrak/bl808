@@ -93,7 +93,7 @@ void spi_sync(void)
 	 * @@@ about 500 us
 	 * If we reduce the delay to ~50 us, the LCD doesn't work.
 	 * This probably isn't an issue of SPI but of the LCD.
-	 * Maybe lcd.c needs some more delays ?
+	 * Maybe st7789.c needs some more delays ?
 	 */
 	for (i = 0; i != 1000; i++)
 		asm("");

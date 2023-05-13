@@ -6,7 +6,7 @@
 #include "cst816.h"
 
 
-#define TOUCH_I2C_ADDR	0x15	/* first register to read */
+#define TOUCH_I2C_ADDR	0x15
 #define TOUCH_INT	32	/* IO32_TP_TINT */
 
 #define TOUCH_I2C	0

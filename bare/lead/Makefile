@@ -4,13 +4,13 @@ CFLAGS = -O9 -Wall -Wextra -Wshadow -Wno-unused-parameter \
 	 -Wmissing-prototypes -Wmissing-declarations
 COMMON_OBJS = mmio.o gpio.o
 LED_OBJS = led.o $(COMMON_OBJS)
-DISP_OBJS = disp.o $(COMMON_OBJS) spi.o lcd.o
+DISP_OBJS = disp.o $(COMMON_OBJS) spi.o st7789.o bl.o
 TOUCH_OBJS = touch.c $(COMMON_OBJS) i2c.o cst816.o
 ACCEL_OBJS = accel.c $(COMMON_OBJS) i2c.o bma400.o
 SE_OBJS = se.c $(COMMON_OBJS) i2c.o atecc.o crc16.o
 OBJS = led.o disp.o touch.o accel.o se.o \
-       $(COMMON_OBJS) spi.o lcd.o i2c.o \
-       cst816.o bma400.o atecc.o crc16.o
+       $(COMMON_OBJS) spi.o i2c.o bl.o \
+       st7789.o cst816.o bma400.o atecc.o crc16.o
 
 include Makefile.c-common
 
