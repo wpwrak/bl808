@@ -14,8 +14,6 @@
 
 static unsigned st7789_spi;
 static unsigned st7789_dnc;
-static unsigned	st7789_width;
-static unsigned	st7789_heigth;
 static unsigned	st7789_xoff;
 static unsigned	st7789_yoff;
 
@@ -23,6 +21,7 @@ static unsigned	st7789_yoff;
 /* --- ST7789V commands ---------------------------------------------------- */
 
 #define	ST7789_SLPOUT	0x11
+#define	ST7789_PTLON	0x12
 #define	ST7789_NORON	0x13
 #define	ST7789_INVON	0x21
 #define	ST7789_DISPON	0x29
@@ -30,6 +29,7 @@ static unsigned	st7789_yoff;
 #define	ST7789_RASET	0x2b
 #define	ST7789_RAMWR	0x2c
 #define	ST7789_MADCTL	0x36
+#define	ST7789_PTLAR	0x30
 #define	ST7789_COLMOD	0x3a
 
 
@@ -91,7 +91,6 @@ void st7789_update(const void *fb, unsigned x0, unsigned y0, unsigned x1,
 {
 	st7789_cmd32(ST7789_CASET,
 	    (x0 + st7789_xoff) << 16 | (x1 + st7789_xoff));
-	/* @@@ no idea why we need this offset, but we do ... */
 	st7789_cmd32(ST7789_RASET,
 	    (y0 + st7789_yoff) << 16 | (y1 + st7789_yoff));
 
@@ -114,8 +113,6 @@ void st7789_init(unsigned spi, unsigned rst, unsigned dnc,
 {
 	st7789_spi = spi;
 	st7789_dnc = dnc;
-	st7789_width = width;
-	st7789_heigth = heigth;
 	st7789_xoff = xoff;
 	st7789_yoff = yoff;
 
@@ -128,6 +125,9 @@ void st7789_init(unsigned spi, unsigned rst, unsigned dnc,
 	mdelay(1);
 	gpio_out(rst, 1);
 	mdelay(120);
+
+	st7789_cmd32(ST7789_PTLAR, yoff << 16 | (heigth + yoff - 1));
+	st7789_cmd(ST7789_PTLON);		// enable partial mode
 
 	st7789_cmd(ST7789_SLPOUT);		// exit sleep mode
 	mdelay(120);				// SLPOUT-SLPIN timing
