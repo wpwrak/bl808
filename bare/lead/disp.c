@@ -64,6 +64,13 @@ int main(int argc, char **argv)
 	 * ST7789V can go as fast as 1 / 66 ns = 15.15 MHz
 	 */
 	spi_init(LCD_MOSI, LCD_SCLK, LCD_CS, 15);
+
+// --- @@@ For some weird reason, we need to initialize and use SPI twice
+	st7789_on();
+
+	spi_init(LCD_MOSI, LCD_SCLK, LCD_CS, 15);
+// ---
+
 	bl_init(LCD_BL);
 	st7789_init(LCD_SPI, LCD_RST, LCD_DnC, LCD_WIDTH, LCD_HEIGHT, 0, 20);
 	st7789_on();
