@@ -59,7 +59,7 @@ enum I2C_SUB_ADDR_LEN {
 #define	I2C_MASK_INT_RXF_EN		(1 << 26)
 #define	I2C_MASK_INT_TXF_EN		(1 << 25)
 #define	I2C_MASK_INT_END_EN		(1 << 24)
-#define	I2C_MASK_INT_ARB_CLR		(1 << 20)	* clear */
+#define	I2C_MASK_INT_ARB_CLR		(1 << 20)	/* clear */
 #define	I2C_MASK_INT_NAK_CLR		(1 << 19)
 #define	I2C_MASK_INT_RXF_CLR		(1 << 18)
 #define	I2C_MASK_INT_TXF_CLR		(1 << 17)

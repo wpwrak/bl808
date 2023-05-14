@@ -45,6 +45,28 @@ enum SPI_FRAME_SIZE {
 
 #define	SPI_INT_STS(spi) \
 	(*(volatile uint32_t *) (SPI_BASE(spi) + 0x4))
+#define SPI_MASK_INT_FER_EN		(1 << 29)	/* enable */
+#define SPI_MASK_INT_TXU_EN		(1 << 28)
+#define SPI_MASK_INT_STO_EN		(1 << 27)
+#define SPI_MASK_INT_RXF_EN		(1 << 26)
+#define SPI_MASK_INT_TXF_EN		(1 << 25)
+#define SPI_MASK_INT_END_EN		(1 << 24)
+#define SPI_MASK_INT_TXU_CLR		(1 << 20)	/* clear */
+#define SPI_MASK_INT_STO_CLR		(1 << 19)
+#define SPI_MASK_INT_END_CLR		(1 << 16)
+#define SPI_MASK_INT_FER_MASK		(1 << 13)	/* mask */
+#define SPI_MASK_INT_TXU_MASK		(1 << 12)
+#define SPI_MASK_INT_STO_MASK		(1 << 11)
+#define SPI_MASK_INT_RXF_MASK		(1 << 10)
+#define SPI_MASK_INT_TXF_MASK		(1 << 9)
+#define SPI_MASK_INT_END_MASK		(1 << 8)
+#define SPI_MASK_INT_FER		(1 << 5)	/* status; FIFO error */
+#define SPI_MASK_INT_TXU		(1 << 4)	/* slave: TX underrun */
+#define SPI_MASK_INT_STO		(1 << 3)	/* slave: timeout */
+#define SPI_MASK_INT_RXF		(1 << 2)	/* RX FIFO ready */
+#define SPI_MASK_INT_TXF		(1 << 1)	/* TX FIFO ready */
+#define SPI_MASK_INT_END		(1 << 0)	/* transfer end */
+
 #define	SPI_BUS_BUSY(spi) \
 	(*(volatile uint32_t *) (SPI_BASE(spi) + 0x8))
 #define	SPI_PRD0(spi) \
@@ -103,12 +125,14 @@ void spi_sync(void)
 void spi_start(void)
 {
 	gpio_out(spi_ss, 0);
+	SPI_CFG(0) |= SPI_MASK_CFG_M_EN;
 }
 
 
 void spi_end(void)
 {
 	spi_sync();
+	SPI_CFG(0) &= ~SPI_MASK_CFG_M_EN;
 	gpio_out(spi_ss, 1);
 	spi_sync();
 }
