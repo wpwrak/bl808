@@ -105,10 +105,10 @@ enum I2C_SUB_ADDR_LEN {
 
 #define I2C_CFG1(i2c) \
 	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x84))
-#define I2C_MASK_CFG1_RX_FIFO_TH        (1 << 24)
-#define I2C_MASK_CFG1_TX_FIFO_TH        (1 << 16)
-#define I2C_MASK_CFG1_RX_FIFO_CNT       (3 << 8)
-#define I2C_MASK_CFG1_TX_FIFO_CNT       (3 << 0)
+#define I2C_MASK_CFG1_RX_FIFO_TH	(1 << 24)
+#define I2C_MASK_CFG1_TX_FIFO_TH	(1 << 16)
+#define I2C_MASK_CFG1_RX_FIFO_CNT	(3 << 8)
+#define I2C_MASK_CFG1_TX_FIFO_CNT	(3 << 0)
 
 #define I2C_WDATA(i2c) \
 	(*(volatile uint32_t *) (I2C_BASE(i2c) + 0x88))

@@ -150,9 +150,9 @@ void spi_send(const void *data, unsigned len)
 void spi_init(unsigned mosi, unsigned sclk, unsigned ss, unsigned MHz)
 {
 	SPI_CFG(0) = SPI_MASK_CFG_SCLK_PH | SPI_MASK_CFG_M_EN;
-        GLB_PARM |= GLB_PARM_MASK_SPI0_MASTER; /* important !!! */
+	GLB_PARM |= GLB_PARM_MASK_SPI0_MASTER; /* important !!! */
 
-        /*
+	/*
 	 * Defaults to SCLK = 160 MHz / (15 + 1) / 2
 	 *  15 = value in register
 	 * + 1 = counts to zero

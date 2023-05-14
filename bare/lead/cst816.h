@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 
-#define CST816_MAX_EVENTS	10      /* maximum number of events */
+#define CST816_MAX_EVENTS	10	/* maximum number of events */
 
 
 enum cst816_gesture {
@@ -17,7 +17,6 @@ enum cst816_gesture {
 	cst816_g_single	= 5,	/* click */
 	cst816_g_double	= 0xb,
 	cst816_g_long	= 0xc,
-	
 };
 
 enum cst816_action {

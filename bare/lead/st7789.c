@@ -130,7 +130,7 @@ void st7789_init(unsigned spi, unsigned rst, unsigned dnc,
 	mdelay(120);
 
 	st7789_cmd(ST7789_SLPOUT);		// exit sleep mode
-        mdelay(120);				// SLPOUT-SLPIN timing
+	mdelay(120);				// SLPOUT-SLPIN timing
 
 	/* --- display organization --- */
 
