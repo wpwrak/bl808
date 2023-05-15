@@ -5,28 +5,12 @@
 
 #include <stdint.h>
 
+#include "board.h"
 #include "delay.h"
 #include "mmio.h"
 #include "spi.h"
 #include "st7789.h"
 #include "bl.h"
-
-
-/* --- M1s LCD connections ------------------------------------------------- */
-
-#define LCD_CS		12	/* IO12_LCD_DBI_CS */
-#define LCD_DnC		13	/* IO13_LCD_DBI_DC */
-#define LCD_MOSI	25	/* IO25_LCD_DBI_SDA */
-#define LCD_SCLK	19	/* IO19_LCD_DBI_SCK */
-
-#define LCD_RST		24	/* IO24_LCD_RESET */
-
-#define LCD_BL		11	/* IO11_LCD_BL_PWM */
-
-#define	LCD_SPI		0
-
-#define LCD_WIDTH	240
-#define LCD_HEIGHT	280
 
 
 static const void *pattern(void)

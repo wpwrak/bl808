@@ -4,16 +4,10 @@
 
 #include <stdio.h>
 
+#include "board.h"
 #include "mmio.h"
 #include "i2c.h"
 #include "atecc.h"
-
-
-#define	ATECC_ADDR	0x60
-
-#define	ATECC_I2C	0
-#define I2C0_SDA	7	/* IO7_CAM_I2C0_SDA */
-#define I2C0_SCL	6	/* IO7_CAM_I2C0_SDA */
 
 
 int main(void)

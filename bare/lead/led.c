@@ -6,12 +6,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "board.h"
 #include "delay.h"
 #include "mmio.h"
 #include "gpio.h"
-
-
-#define	LED	8	/* IO8_PWM_LED */
 
 
 int main(void)
