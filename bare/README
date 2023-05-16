@@ -30,6 +30,7 @@ Peripheral	Where	Status
 ----------	-----	-------------------------------------------------------
 GPIO		BL808	supports all relevant features
   LED		M1s	works in "lead"
+  Buttons	M1s	works in "lead"
 SPI0		BL808	Tx-only, SPI-GPIO synchronization via delays
   ST7789V	M1s	basic setup
 I2C0		BL808	read and write, see i2c.c for known issues

@@ -12,14 +12,16 @@
 #ifndef BOARD_H
 #define	BOARD_H
 
-/* --- M1s I2C ------------------------------------------------------------- */
-
-#define I2C0_SDA	7	/* IO7_CAM_I2C0_SDA */
-#define I2C0_SCL	6	/* IO7_CAM_I2C0_SDA */
-
 /* --- LED ----------------------------------------------------------------- */
 
 #define LED		8	/* IO8_PWM_LED */
+
+/* --- Buttons ------------------------------------------------------------- */
+
+/* Left and right if USB is "down" and the display is facing upward */
+
+#define	BUTTON_R	22	/* IO22_Button1 */
+#define	BUTTON_L	23	/* IO23_Button2 */
 
 /* --- Display module: TFT ------------------------------------------------- */
 
@@ -34,6 +36,11 @@
 
 #define LCD_WIDTH	240
 #define LCD_HEIGHT	280
+
+/* --- M1s I2C ------------------------------------------------------------- */
+
+#define I2C0_SDA	7	/* IO7_CAM_I2C0_SDA */
+#define I2C0_SCL	6	/* IO7_CAM_I2C0_SDA */
 
 /* --- Display module: backlight ------------------------------------------- */
 
