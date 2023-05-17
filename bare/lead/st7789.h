@@ -8,12 +8,19 @@
 #include <stdint.h>
 
 
-/* R5 G6 B5 */
+/*
+ * R5 G6 B5, with byte swapping.
+ *
+ * RGB888:			 RRRRRxxx GGGgggxx BBBBBxxx
+ *					     |
+ * RGB88 and byte-swapped:		     v
+ * RRRR.RGGG.gggB.BBBBB becomes gggB.BBBBB.RRRR.RGGG
+ */
 
 static inline uint16_t st7789_rgb(uint8_t r, uint8_t g, uint8_t b)
 {
-	return (r & 0xf8) | (g & 0xe0) >> 5 | (g & 0x1c) << 6 | (b & 0xf8) >> 3;
-//	return (r & 0xf8) << 8 | (g & 0xfc) << 3 | (b & 0xf8) >> 3;
+	return (r & 0xf8) | (g & 0xe0) >> 5 | (g & 0x1c) << 12 |
+	    (b & 0xf8) << 5;
 }
 
 
