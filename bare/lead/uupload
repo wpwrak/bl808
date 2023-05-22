@@ -48,9 +48,11 @@ fi
 	echo stty -echo
 	sleep 0.1
 	echo uudecode
+	name=`basename "$1"`
 	# slow down so that we don't overrun anything
-	uuencode "$1" "$1" | while read -r l; do echo "$l"; sleep 0.01; done
-	echo md5sum "$1"
+	uuencode "$1" "$name" |
+	    while read -r l; do echo "$l"; sleep 0.01; done
+	echo md5sum "$name"
 	echo stty echo
 ) >"$tty"
 md5sum "$1"
