@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "board.h"
+#include "delay.h"
 #include "mmio.h"
 #include "i2c.h"
 #include "cst816.h"
@@ -80,10 +81,11 @@ int main(void)
 		on = !cst816_poll();
 		if (on == last)
 			continue;
-//		printf("%u\n", on);
+		printf("%u\n", on);
 		if (on) {
 			cst816_read(&t);
-			decode_touch(&t);
+printf("\t%u\n", t.events);
+ //			decode_touch(&t);
 //			printf("0x%x %u:0x%x 0x%x\n",
 //			    t.gesture, t.events, t.event[0].x, t.event[0].y);
 		}

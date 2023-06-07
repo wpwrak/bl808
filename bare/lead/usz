@@ -1,0 +1,49 @@
+#!/bin/bash
+# bash for read -r
+
+
+usage()
+{
+	echo "usage: $0 [tty] file" 1>&2
+	exit 1
+}
+
+
+while [ "$1" ]; do
+	case "$1" in
+	-x)	set -x;;
+	-*)	usage;;
+	*)	break;;
+	esac
+	shift
+done
+
+[ "$1" ] || usage
+[ "$3" ] && usage
+
+if [ "$2" ]; then
+	if [ -c "$1" ]; then
+		tty=$1
+	elif [ -c /dev/tty"$1" ]; then
+		tty=/dev/tty$1
+	else
+		echo "$1: not a tty" 1>&2
+		exit 1
+	fi
+	shift
+else
+	tty=/dev/ttyACM`ls -1 /dev/ttyACM* | sed 's/.*ttyACM'// |
+	    sort -n | sed 1q`
+	if [ ! -c "$tty" ]; then
+		echo "no suitable tty found" 1>&2
+		exit 1
+	fi
+fi
+
+
+if [ ! -f "$1" ]; then
+	echo "$1: not found" 1>&2
+	exit 1
+fi
+
+sz -b -y <"$tty" >"$tty" "$1"
